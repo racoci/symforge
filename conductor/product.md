@@ -65,8 +65,27 @@ graph TD
 5. **Incremental Fine-Tuning with Specialized LoRAs:** Modulates neural search heuristics using domain-specific LoRA adapters without catastrophic forgetting or full checkpoint retraining.
 6. **Zero Local Training Footprint:** Decoupled training engine protocol allowing 100% local development, testing, and synthesis while abstracting model training behind cloud APIs.
 
-## 3. Target Domains
+## 3. The Three Project Pillars & Unified Paradigm
 
-- **Signed Distance Functions (SDFs):** Geometric program synthesis for CAD, 3D shapes, and CSG trees with compiled latency metrics.
-- **Digital Signal Processing (DSP):** Audio synthesis pipelines, modular filters, and procedural effects.
-- **Formal Verification & Functional Synthesis:** Composing pure functional programs under strict typed invariants.
+SymForge addresses program synthesis across two concrete, physically disparate modalities by casting them into an identical mathematical and neurosymbolic framework, followed by domain-agnostic generalization:
+
+### 3.1 Pillar 1: Audio Synthesizer (1D Procedural DSP)
+- **Domain:** Continuous 1D time-series signals $s(t) \in [-1, 1]$.
+- **Primitives:** Generators (Sine, Saw, Square, Noise), Envelopes (ADSR, Exponential Decay), Filters (LowPass, HighPass, BandPass), Modulators (LFO, FM, AM).
+- **Perceptual Alignment:** Multi-scale Short-Time Fourier Transform (STFT) log-magnitude and phase-invariant spectral embeddings.
+- **Contrastive Objective:** Discriminates target acoustic timbres against synthetic distractors in normalized spectral latent space.
+
+### 3.2 Pillar 2: SDF Synthesizer (3D Implicit Geometry)
+- **Domain:** Continuous spatial fields $f(\mathbf{p}) \in \mathbb{R}$ where $\mathbf{p} \in \mathbb{R}^3$.
+- **Primitives:** Analytical shapes (Sphere, Box, Cylinder, Torus), Affine Transforms (Translate, Rotate, Scale), CSG Combinators (Union, Difference, SmoothUnion).
+- **Perceptual Alignment:** $\varepsilon$-boundary surface distance evaluation and multi-angle ray-marched silhouettes/depth.
+- **Contrastive Objective:** Discriminates target geometric forms against topological distractors and non-matching CSG variants.
+
+### 3.3 Pillar 3: Generalization (Universal Neurosymbolic Core)
+- **Domain-Agnostic Engine:** Typed AST and DAG representation with dynamic hole filling (`Hole[T]`) and structural deduplication.
+- **Procedural Task Generation:** Probabilistic Context-Free Grammars (PCFG) and Context-Sensitive Attribute Grammars generating infinite synthetic benchmark tasks with guaranteed physical and numerical stability.
+- **Unified Contrastive Perceptual Loss:** Generic InfoNCE formulation anchoring program outputs in perceptual embedding space.
+- **Abstraction Discovery (Library Learning):** Syntactic anti-unification and Minimum Description Length (MDL) compression promoting recurrent subgraphs into first-class reusable macro-primitives.
+- **Decoupled Training Dispatch:** Zero local heavy training footprint; asynchronous delegation of LoRA fine-tuning to remote compute providers.
+
+For comprehensive architectural design and mathematical formulations, refer to `docs/architecture/unified_synthesis_architecture.md`.
