@@ -1,0 +1,99 @@
+# Byte-compiled / optimized / Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions & build artifacts
+*.so
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# C/C++ / CUDA build artifacts
+*.o
+*.obj
+*.dll
+*.dylib
+*.exe
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+
+# Rust / Cargo artifacts
+target/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Testing & Coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Type checking / Linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Experiment tracking, model checkpoints & logs
+runs/
+wandb/
+tensorboard/
+checkpoints/
+outputs/
+logs/
+*.log
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Data & cache directories
+data/
+datasets/
+cache/
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
