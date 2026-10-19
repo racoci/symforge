@@ -25,7 +25,7 @@ This implementation plan strictly adheres to the **Conductor Workflow** and **GE
 
 Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `AudioNode`, `SDFNode`), Lean-to-PyTorch metaprogramming transpiler, PCFG synthetic task generator, generic contrastive perceptual loss interface, and discrete beam/A* search.
 
-- [ ] Task 1.1: Lean 4 Package Scaffolding & Inductive Grammar Definitions
+- [x] Task 1.1: Lean 4 Package Scaffolding & Inductive Grammar Definitions [edff5ec]
   - **Objective:** Initialize the Lean 4 package (`SymForge.IR`) using `lake init` and define inductive grammar types (`AudioNode`, `SDFNode`, `HardwareNode`) with attached `FreeParam` records.
   - **Bottleneck Mitigation:** Pure symbolic definitions in Lean 4 without external network dependencies; provides compile-time mathematical guarantees of well-formedness.
   - **Automated Test Definition:** `lake test` or `lake build`
