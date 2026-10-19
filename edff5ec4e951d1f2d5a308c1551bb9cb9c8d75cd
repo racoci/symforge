@@ -1,0 +1,7 @@
+Task 1.1 Complete:
+- Initialized Lean 4 formal IR package under packages/lean/symforge_ir using Lake.
+- Defined inductive grammar types (AudioNode, SDFNode, HardwareNode, UniversalNode) with FreeParam records.
+- Implemented size, depth, parameter collection, and JSON serialization.
+- Proved non-emptiness invariants (size_pos, depth_pos) using Lean 4 omega tactics.
+- Built symforge_cli executable verifying JSON AST round-tripping.
+- Documented in docs/architecture/lean4_formal_ir.md.
