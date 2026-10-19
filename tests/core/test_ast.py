@@ -90,3 +90,42 @@ def test_ast_serialization_roundtrip_sdf():
     recovered = deserialize_node(raw_dict)
     assert recovered == translated
     assert serialize_node(recovered) == raw_dict
+
+
+def test_hole_nodes_and_substitution():
+    from symforge.core.ast import (
+        AudioHoleNode,
+        SDFHoleNode,
+        find_holes,
+        has_holes,
+        substitute_hole,
+        update_ast_params,
+    )
+
+    h1 = AudioHoleNode("h1")
+    assert has_holes(h1)
+    assert len(find_holes(h1)) == 1
+
+    fc = FreeParam("fc", 100.0, 10000.0, 1000.0)
+    res = FreeParam("res", 0.1, 10.0, 0.707)
+    partial_lp = LowPassNode(cutoff=fc, resonance=res, input_node=h1)
+
+    assert has_holes(partial_lp)
+    holes = find_holes(partial_lp)
+    assert len(holes) == 1
+    assert holes[0].hole_id == "h1"
+
+    f0 = FreeParam("f0", 20.0, 20000.0, 440.0)
+    saw = SawNode(freq=f0)
+
+    complete_lp = substitute_hole(partial_lp, "h1", saw)
+    assert not has_holes(complete_lp)
+    assert isinstance(complete_lp, LowPassNode)
+    assert complete_lp.input_node == saw
+
+    # Test update_ast_params
+    updated = update_ast_params(complete_lp, {"f0": 880.0, "fc": 2000.0})
+    assert isinstance(updated, LowPassNode)
+    assert updated.cutoff.default_val == 2000.0
+    assert updated.input_node.freq.default_val == 880.0
+

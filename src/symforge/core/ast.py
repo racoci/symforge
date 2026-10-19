@@ -448,6 +448,243 @@ class DifferenceNode(SDFNode):
 
 
 # ==========================================
+# Placeholder Holes & Partial Programs
+# ==========================================
+
+
+@dataclass(frozen=True)
+class HoleNode(ASTNode):
+    """Base class for typed placeholder holes in partial AST expressions."""
+
+    hole_id: str
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {"hole": {"id": self.hole_id}}
+
+
+@dataclass(frozen=True)
+class AudioHoleNode(AudioNode, HoleNode):
+    """Typed hole representing an unexpanded AudioNode."""
+
+    hole_id: str
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {"audioHole": {"id": self.hole_id}}
+
+
+@dataclass(frozen=True)
+class SDFHoleNode(SDFNode, HoleNode):
+    """Typed hole representing an unexpanded SDFNode."""
+
+    hole_id: str
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {"sdfHole": {"id": self.hole_id}}
+
+
+def find_holes(node: ASTNode) -> List[HoleNode]:
+    """Find all hole nodes in depth-first order within an AST."""
+    holes: List[HoleNode] = []
+    if isinstance(node, HoleNode):
+        holes.append(node)
+    for child in node.children:
+        holes.extend(find_holes(child))
+    return holes
+
+
+def has_holes(node: ASTNode) -> bool:
+    """Check if an AST contains any unexpanded holes."""
+    if isinstance(node, HoleNode):
+        return True
+    return any(has_holes(child) for child in node.children)
+
+
+def substitute_hole(node: ASTNode, hole_id: str, replacement: ASTNode) -> ASTNode:
+    """Substitute a specific hole identified by hole_id with a replacement ASTNode."""
+    if isinstance(node, HoleNode) and node.hole_id == hole_id:
+        return replacement
+
+    # Audio composite nodes
+    if isinstance(node, ADSRNode):
+        return ADSRNode(
+            attack=node.attack,
+            decay=node.decay,
+            sustain=node.sustain,
+            release=node.release,
+            gate=substitute_hole(node.gate, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, LowPassNode):
+        return LowPassNode(
+            cutoff=node.cutoff,
+            resonance=node.resonance,
+            input_node=substitute_hole(node.input_node, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, GainNode):
+        return GainNode(
+            gain=node.gain,
+            input_node=substitute_hole(node.input_node, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, MixNode):
+        return MixNode(
+            ratio=node.ratio,
+            input1=substitute_hole(node.input1, hole_id, replacement),  # type: ignore
+            input2=substitute_hole(node.input2, hole_id, replacement),  # type: ignore
+        )
+
+    # SDF composite nodes
+    if isinstance(node, TranslateNode):
+        return TranslateNode(
+            dx=node.dx,
+            dy=node.dy,
+            dz=node.dz,
+            child=substitute_hole(node.child, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, RotateNode):
+        return RotateNode(
+            rx=node.rx,
+            ry=node.ry,
+            rz=node.rz,
+            child=substitute_hole(node.child, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, ScaleNode):
+        return ScaleNode(
+            s=node.s,
+            child=substitute_hole(node.child, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, UnionNode):
+        return UnionNode(
+            smoothness=node.smoothness,
+            a=substitute_hole(node.a, hole_id, replacement),  # type: ignore
+            b=substitute_hole(node.b, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, IntersectionNode):
+        return IntersectionNode(
+            a=substitute_hole(node.a, hole_id, replacement),  # type: ignore
+            b=substitute_hole(node.b, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, DifferenceNode):
+        return DifferenceNode(
+            a=substitute_hole(node.a, hole_id, replacement),  # type: ignore
+            b=substitute_hole(node.b, hole_id, replacement),  # type: ignore
+        )
+
+    return node
+
+
+def _update_param(p: FreeParam, param_values: Dict[str, float]) -> FreeParam:
+    if p.id in param_values:
+        return FreeParam(
+            id=p.id,
+            min_val=p.min_val,
+            max_val=p.max_val,
+            default_val=float(param_values[p.id]),
+        )
+    return p
+
+
+def update_ast_params(node: ASTNode, param_values: Dict[str, float]) -> ASTNode:
+    """Return a new AST with updated default values for continuous FreeParams."""
+    if isinstance(node, SineNode):
+        return SineNode(
+            freq=_update_param(node.freq, param_values),
+            phase=_update_param(node.phase, param_values),
+        )
+    if isinstance(node, SawNode):
+        return SawNode(freq=_update_param(node.freq, param_values))
+    if isinstance(node, SquareNode):
+        return SquareNode(
+            freq=_update_param(node.freq, param_values),
+            duty=_update_param(node.duty, param_values),
+        )
+    if isinstance(node, ADSRNode):
+        return ADSRNode(
+            attack=_update_param(node.attack, param_values),
+            decay=_update_param(node.decay, param_values),
+            sustain=_update_param(node.sustain, param_values),
+            release=_update_param(node.release, param_values),
+            gate=update_ast_params(node.gate, param_values),  # type: ignore
+        )
+    if isinstance(node, LowPassNode):
+        return LowPassNode(
+            cutoff=_update_param(node.cutoff, param_values),
+            resonance=_update_param(node.resonance, param_values),
+            input_node=update_ast_params(node.input_node, param_values),  # type: ignore
+        )
+    if isinstance(node, GainNode):
+        return GainNode(
+            gain=_update_param(node.gain, param_values),
+            input_node=update_ast_params(node.input_node, param_values),  # type: ignore
+        )
+    if isinstance(node, MixNode):
+        return MixNode(
+            ratio=_update_param(node.ratio, param_values),
+            input1=update_ast_params(node.input1, param_values),  # type: ignore
+            input2=update_ast_params(node.input2, param_values),  # type: ignore
+        )
+    if isinstance(node, FMNode):
+        return FMNode(
+            carrier=_update_param(node.carrier, param_values),
+            mod_freq=_update_param(node.mod_freq, param_values),
+            mod_index=_update_param(node.mod_index, param_values),
+        )
+    if isinstance(node, SphereNode):
+        return SphereNode(radius=_update_param(node.radius, param_values))
+    if isinstance(node, BoxNode):
+        return BoxNode(
+            width=_update_param(node.width, param_values),
+            height=_update_param(node.height, param_values),
+            depth=_update_param(node.depth, param_values),
+        )
+    if isinstance(node, CylinderNode):
+        return CylinderNode(
+            radius=_update_param(node.radius, param_values),
+            height=_update_param(node.height, param_values),
+        )
+    if isinstance(node, TorusNode):
+        return TorusNode(
+            major_radius=_update_param(node.major_radius, param_values),
+            minor_radius=_update_param(node.minor_radius, param_values),
+        )
+    if isinstance(node, TranslateNode):
+        return TranslateNode(
+            dx=_update_param(node.dx, param_values),
+            dy=_update_param(node.dy, param_values),
+            dz=_update_param(node.dz, param_values),
+            child=update_ast_params(node.child, param_values),  # type: ignore
+        )
+    if isinstance(node, RotateNode):
+        return RotateNode(
+            rx=_update_param(node.rx, param_values),
+            ry=_update_param(node.ry, param_values),
+            rz=_update_param(node.rz, param_values),
+            child=update_ast_params(node.child, param_values),  # type: ignore
+        )
+    if isinstance(node, ScaleNode):
+        return ScaleNode(
+            s=_update_param(node.s, param_values),
+            child=update_ast_params(node.child, param_values),  # type: ignore
+        )
+    if isinstance(node, UnionNode):
+        return UnionNode(
+            smoothness=_update_param(node.smoothness, param_values),
+            a=update_ast_params(node.a, param_values),  # type: ignore
+            b=update_ast_params(node.b, param_values),  # type: ignore
+        )
+    if isinstance(node, IntersectionNode):
+        return IntersectionNode(
+            a=update_ast_params(node.a, param_values),  # type: ignore
+            b=update_ast_params(node.b, param_values),  # type: ignore
+        )
+    if isinstance(node, DifferenceNode):
+        return DifferenceNode(
+            a=update_ast_params(node.a, param_values),  # type: ignore
+            b=update_ast_params(node.b, param_values),  # type: ignore
+        )
+
+    return node
+
+
+# ==========================================
 # Serialization & Deserialization
 # ==========================================
 
@@ -565,5 +802,13 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
             a=deserialize_node(fields["a"]),  # type: ignore
             b=deserialize_node(fields["b"]),  # type: ignore
         )
+
+    # Hole nodes
+    if tag == "audioHole":
+        return AudioHoleNode(hole_id=str(fields["id"]))
+    if tag == "sdfHole":
+        return SDFHoleNode(hole_id=str(fields["id"]))
+    if tag == "hole":
+        return HoleNode(hole_id=str(fields["id"]))
 
     raise ValueError(f"Unknown node constructor tag: {tag}")
