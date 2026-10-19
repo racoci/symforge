@@ -33,7 +33,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
   - **Documentation Artifact:** `docs/architecture/lean4_formal_ir.md`
   - **Pass-to-Complete Gate:** `lake build` compiles cleanly without warnings.
 
-- [ ] Task 1.2: Typed AST & Canonical DAG Representation with Python-Lean Bridge
+- [x] Task 1.2: Typed AST & Canonical DAG Representation with Python-Lean Bridge [f9306f6]
   - **Objective:** Implement immutable typed AST/DAG representation in Python and bidirectional FFI/IPC bridge to serialize/deserialize programs between Python and Lean 4.
   - **Bottleneck Mitigation:** JSON/IPC serializable data contract; isolated bridge process with explicit timeouts.
   - **Automated Test Definition:** `pytest -v tests/core/test_ast.py tests/core/test_lean_bridge.py`
