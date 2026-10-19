@@ -1,0 +1,7 @@
+Task 1.2 Complete:
+- Implemented immutable typed AST nodes for Audio (Sine, Saw, Square, Noise, ADSR, LowPass, Gain, Mix, FM) and SDF (Sphere, Box, Cylinder, Torus, Translate, Rotate, Scale, Union, Intersection, Difference) domains.
+- Implemented canonical hash-consed DAG with common subexpression elimination.
+- Implemented bidirectional IPC bridge with Lean 4 symforge_cli supporting timeout-bounded execution.
+- Added comprehensive unit tests in tests/core/test_ast.py, test_dag.py, and test_lean_bridge.py.
+- Verified 1,000 round-trip program serializations against Lean 4 schema.
+- Documented in docs/architecture/typed_ast_dag.md.
