@@ -41,7 +41,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
   - **Documentation Artifact:** `docs/architecture/typed_ast_dag.md`
   - **Pass-to-Complete Gate:** 100% round-trip serialization pass across 1,000 generated programs.
 
-- [ ] Task 1.3: Lean 4 Metaprogramming Transpiler (AST -> Differentiable ML Graph)
+- [x] Task 1.3: Lean 4 Metaprogramming Transpiler (AST -> Differentiable ML Graph) [7be0b74]
   - **Objective:** Write Lean 4 elaboration macros (`Lean.Elab`) that visit an AST instance and emit a differentiable PyTorch `nn.Module` / JAX computational graph, bundling all `FreeParam` into a single continuous tensor $\Theta \in \mathbb{R}^K$.
   - **Bottleneck Mitigation:** Pure code generation; execution occurs downstream in Python.
   - **Automated Test Definition:** `pytest -v tests/core/test_transpiler.py`
