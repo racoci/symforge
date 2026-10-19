@@ -9,30 +9,25 @@
 
 ## 1. Executive Summary & Problem Statement
 
-The goal of **SymForge** is cost-aware differentiable program synthesis over typed grammars with dynamic structural growth and subexpression sharing. To establish a universal framework, the project is divided into three concrete, mutually reinforcing pillars:
+The goal of **SymForge** is cost-aware differentiable program synthesis over typed grammars with dynamic structural growth and subexpression sharing. To establish a universal framework, the project solves both **Audio (1D Procedural DSP)** and **SDF (3D Implicit Geometry)** in parallel, governed by a unified **3-Tier Neurosymbolic Pipeline**:
 
-1. **Pillar 1: Audio Synthesizer (1D Procedural DSP):** Synthesizing acoustic timbres and sound effects from known oscillators, filters, envelopes, and modulators.
-2. **Pillar 2: SDF Synthesizer (3D Implicit Geometry):** Synthesizing geometric CAD and shapes from analytical primitives, spatial transforms, and CSG booleans.
-3. **Pillar 3: Generalization (Universal Neurosymbolic Core):** The shared domain-agnostic engine that solves both problems using the exact same paradigm:
-   - **Unified Primitive Composition:** Combining known primitives into higher-order primitives and complex functions to satisfy procedural target conditions.
-   - **Differentiable Contrastive Perceptual Loss:** Evaluating perceptual similarity via contrastive objectives (InfoNCE) over latent acoustic/geometric embeddings, overcoming the failure modes of raw $L_1/L_2$ sample matching.
-   - **Procedural Synthetic Data Generation:** Generating infinite curriculum tasks via Probabilistic Context-Free Grammars (PCFG) and Context-Sensitive / Attribute Grammars, guaranteeing numerical stability and physical validity without human data annotation.
-   - **DreamCoder-Style Abstraction Discovery:** Identifying recurrent subgraphs across solved tasks and promoting them to first-class macro-primitives via Minimum Description Length (MDL) compression.
-   - **Decoupled Remote Compute Engine:** Preserving local machine responsiveness by abstracting heavy training and LoRA updates behind cloud APIs (Modal, SageMaker) or deterministic zero-cost mocks.
+1. **Model 1: Primitive & Depth Estimator (PDE):** Identifies *which* primitives are present in the target observation and at *what hierarchical level / depth* of the composition each primitive resides.
+2. **Model 2: Topology & Grammar Connector (TGC):** Assembles the predicted multiset of primitives and depth strata into a valid typed AST/DAG $G \in \mathcal{L}(\Gamma)$.
+3. **Model 3: Fast Parameter Optimizer (FPO):** Rapidly predicts warm-start continuous parameters $\Theta_0$ and executes fast differentiable autograd refinement over the InfoNCE perceptual loss.
 
 ```text
 +-------------------------------------------------------------------------------------------------+
 |                                    LOCAL CONTROL PLANE (CPU-ONLY)                               |
 |                                                                                                 |
 |   +-----------------------+       +------------------------+       +------------------------+   |
-|   |  Adaptive Curriculum  | ----> |  Typed Beam / A* Synth | ----> |  Abstraction Discovery |   |
-|   |  (PCFG Task Generator)|       |  (Dynamic AST/DAG)     |       |  (DreamCoder / MDL)    |   |
+|   | Complexity Curriculum | ----> |  3-Tier Neural Synth   | ----> |  Abstraction Discovery |   |
+|   | (PCFG Task Generator) |       |  (PDE -> TGC -> FPO)   |       |  (DreamCoder / MDL)    |   |
 |   +-----------------------+       +-----------+------------+       +-----------+------------+   |
 |               ^                               |                                |                |
 |               | Task Feedback                 v Evaluation & Loss              v New Primitives |
 |   +-----------+-----------+       +-----------+------------+       +-----------+------------+   |
 |   |    Meta-Controller    | <---  | Contrastive Perceptual |       |    DSL Grammar Library |   |
-|   | (Pacing & Regimes)    |       | Loss Engine (InfoNCE)  | ----> | (Typed Hole Expansions)|   |
+|   | (Pacing & Regimes)    |       | Loss Engine (InfoNCE)  | ----> | (Lean 4 Inductive Env) |   |
 |   +-----------+-----------+       +-----------+------------+       +------------------------+   |
 |               |                               |                                                 |
 +---------------|-------------------------------|-------------------------------------------------+
@@ -58,15 +53,16 @@ The goal of **SymForge** is cost-aware differentiable program synthesis over typ
 ```mermaid
 graph TD
     subgraph LocalControlPlane [Local Control Plane - CPU Only]
-        AC[Adaptive Curriculum & PCFG Task Sampler] -->|Task Specifications| SYN[Typed AST / DAG Synthesizer<br/>Beam / A* Search Engine]
-        SYN -->|Candidate Programs| EVL[Contrastive Perceptual Loss Engine<br/>InfoNCE / Hardware Cost Model]
+        AC[Complexity-Ordered PCFG Task Sampler] -->|Target x| M1[Model 1: Primitive & Depth Estimator PDE]
+        M1 -->|Multiset p_i, depth_i| M2[Model 2: Topology Connector TGC]
+        M2 -->|Typed AST/DAG G| M3[Model 3: Fast Parameter Optimizer FPO]
+        M3 -->|Completed Program G, Theta| EVL[Contrastive Perceptual Loss InfoNCE]
         EVL -->|Solved Trajectories| HARV[Trajectory Harvester & Replay Buffer]
-        EVL -->|Accepted Programs| ABD[Abstraction Discovery<br/>Anti-Unification & MDL Compression]
-        ABD -->|Invented Macro Primitives| DSL[DSL Grammar & Production Rules]
-        DSL -->|Extended Type Rules| SYN
+        EVL -->|Accepted Programs| ABD[Abstraction Discovery DreamCoder MDL]
+        ABD -->|Invented Macro Primitives| DSL[DSL Grammar & Lean 4 Environment]
+        DSL -->|Extended Rules| M2
         
         MC[Meta-Controller<br/>Training Regime & Pacing] -->|Curriculum Pacing| AC
-        MC -->|Search Budget & Temperature| SYN
         HARV -->|Batch Trajectories| MC
     end
 
@@ -81,7 +77,9 @@ graph TD
         MOCK -.->|Simulated Adapter| REG[Specialized LoRA Registry]
         MODAL -.->|Trained PEFT Weights| REG
         SMR -.->|Trained PEFT Weights| REG
-        REG -->|Lightweight Local CPU Inference| SYN
+        REG -->|Lightweight Local CPU Inference| M1
+        REG -->|Lightweight Local CPU Inference| M2
+        REG -->|Lightweight Local CPU Inference| M3
     end
 ```
 

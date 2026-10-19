@@ -27,7 +27,7 @@ O sistema opera sob uma **isomorfia fundamental**: seja na geração de timbres 
 |            |                             v Metaprogramação                    v Gradientes        |
 |            |                  +----------+-----------+               +--------+-------+           |
 |            +----------------- | PyTorch/JAX Backend  | <------------ |   Otimizador   |           |
-|            Novas Primitives   | & Abstraction Engine | Trajetórias   |   Contínuo     |           |
+|            Novas Primitives   | & 3-Tier Model Pipeline| Trajetórias |   Contínuo     |           |
 |            na Gramática       +----------------------+ Aceitas       +----------------+           |
 +---------------------------------------------------------------------------------------------------+
 ```
@@ -48,7 +48,17 @@ graph TD
 
 ---
 
-## 2. As Três Divisões do Projeto
+## 2. Arquitetura em Três Níveis (3-Tier Pipeline)
+
+Em vez de tratar a busca do programa como uma "caixa preta" ponta a ponta, o SymForge resolve a complexidade combinatória e contínua quebrando o problema em **3 modelos ortogonais**. Ambos os domínios (Áudio e SDF) são treinados em paralelo com dados independentes gerados pela PCFG para comparar dificuldades de aprendizado:
+
+1. **Modelo 1: Estimador de Primitivas e Profundidade (PDE):** Observa o alvo $x$ e prediz o *multiconjunto* de primitivas presentes e em qual *nível de profundidade* da árvore elas estão (ex: `[LowPass (nível 0), Sine (nível 2), Saw (nível 2)]`).
+2. **Modelo 2: Conector de Topologia e Gramática (TGC):** Recebe o multiconjunto estratificado e monta o grafo estrutural $G$ guiado pela restrição de tipos, sem se preocupar com os valores dos parâmetros.
+3. **Modelo 3: Otimizador Rápido de Parâmetros (FPO):** Com a topologia exata definida, realiza uma predição (warm-start) e executa passos rápidos de gradiente descendente via PyTorch autograd para ajustar $\Theta \in \mathbb{R}^K$.
+
+---
+
+## 3. As Três Divisões do Projeto
 
 O SymForge está estruturado em três pilares fundamentais de desenvolvimento:
 

@@ -77,81 +77,57 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
 
 ---
 
-## Phase 2: Pillar 1 - Audio Synthesizer (1D Procedural DSP & SFX)
+## Phase 2: Paired Domain Primitives & Differentiable Renderers (Audio 1D + SDF 3D)
 
-Focus: 1D digital signal processing primitives, multi-scale STFT spectral perceptual loss, audio PCFG grammar, TorchSynth/Dexed ingestion, and procedural timbre/SFX synthesis.
+Focus: Implement the complete sets of procedural primitives and differentiable perceptual loss evaluators for both Audio and SDF in parallel to enable cross-domain benchmarking.
 
-- [ ] Task 2.1: DSP Primitives Library
-  - **Objective:** Implement pure functional 1D DSP primitives: Oscillators (`Sine`, `Saw`, `Square`, `Noise`), Envelopes (`ADSR`, `ExpDecay`), Modulators (`LFO`, `FM`), and Filters (`LowPass`, `Gain`, `Mix`).
-  - **Bottleneck Mitigation:** Vectorized NumPy audio array generation over time vector $t \in [0, T]$ at 44.1kHz / 16kHz.
-  - **Automated Test Definition:** `pytest -v tests/audio/test_dsp_primitives.py`
-    - Invariants: Analytical waveform frequencies match within 0.1Hz; amplitude bounds remain strictly within $[-1.0, 1.0]$.
-  - **Documentation Artifact:** `docs/architecture/audio_dsp_primitives.md`
-  - **Pass-to-Complete Gate:** All primitives pass waveform assertion tests and generate clean audio arrays without NaN/Inf.
+- [ ] Task 2.1: Audio 1D DSP Primitives & Multi-scale STFT Extractor
+  - **Objective:** Implement pure functional 1D DSP primitives (Oscillators, Envelopes, Modulators, Filters) and the multi-resolution STFT contrastive loss extractor.
+  - **Automated Test Definition:** `pytest -v tests/audio/test_dsp_primitives.py tests/audio/test_audio_loss.py`
+  - **Pass-to-Complete Gate:** All primitives pass analytical waveform tests; STFT discriminates Timbre differences.
 
-- [ ] Task 2.2: Multi-Scale STFT Feature Extractor & Contrastive Audio Loss
-  - **Objective:** Implement multi-resolution Short-Time Fourier Transform (STFT) log-magnitude extractor and contrastive InfoNCE loss against spectral distractors.
-  - **Bottleneck Mitigation:** SciPy FFT implementation optimized for sub-second batch evaluation.
-  - **Automated Test Definition:** `pytest -v tests/audio/test_audio_loss.py`
-    - Invariants: Invariant to phase shifts; sensitive to harmonic frequency deviations; discriminates timbre differences.
-  - **Documentation Artifact:** `docs/architecture/audio_perceptual_loss.md`
-  - **Pass-to-Complete Gate:** Differentiates between Sawtooth and Square waves of equal pitch with contrastive separation margin $> 2.0$.
+- [ ] Task 2.2: SDF 3D CSG Primitives & Surface/Raymarching Extractor
+  - **Objective:** Implement 3D SDF primitives (Sphere, Box, Cylinder, etc.), spatial transforms, CSG booleans, and the $\varepsilon$-boundary surface contrastive geometric loss extractor.
+  - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_primitives.py tests/sdf/test_sdf_loss.py`
+  - **Pass-to-Complete Gate:** 100% test pass on shape distances; Loss completely separates disjoint geometric shapes.
 
-- [ ] Task 2.3: Audio PCFG Domain Grammar & Procedural Timbre Generator
-  - **Objective:** Instantiate the audio domain grammar with stability constraints (preventing unstable IIR filter poles and audio clipping) to generate synthetic audio synthesis tasks.
-  - **Bottleneck Mitigation:** Pre-calculated sample cache for common synthetic targets.
-  - **Automated Test Definition:** `pytest -v tests/audio/test_audio_pcfg.py`
-    - Invariants: 100% of generated audio programs evaluate without clipping ($|s(t)| \le 1.0$) or numerical divergence.
-  - **Documentation Artifact:** `docs/architecture/audio_pcfg_grammar.md`
-  - **Pass-to-Complete Gate:** Procedurally generates 100 diverse acoustic benchmarks (leads, pads, percussion).
+- [ ] Task 2.3: Procedural Complexity-Stratified PCFG Generators (Audio & SDF)
+  - **Objective:** Instantiate PCFG grammar constraints for both domains supporting 5 discrete Levels of Complexity (Curriculum Level 1 to 5).
+  - **Automated Test Definition:** `pytest -v tests/core/test_pcfg_curriculum.py`
+  - **Pass-to-Complete Gate:** Generates distinct complexity layers (from isolated primitives up to 5+ deep composite DAGs) without type/physical violations.
 
-- [ ] Task 2.4: Audio Abstraction Discovery Benchmark (Dexed, TorchSynth & NSynth)
-  - **Objective:** Run end-to-end synthesis on synthetic audio targets and demonstrate automatic abstraction of common audio subgraphs (e.g., FM Synthesis Pair, Percussive Envelope) evaluated against TorchSynth/Dexed patches.
-  - **Bottleneck Mitigation:** Local discrete beam search over audio grammar in < 5 seconds per task.
-  - **Automated Test Definition:** `pytest -v tests/audio/test_audio_synthesis_benchmark.py`
-    - Invariants: Reconstructs FM synthesis sound and identifies candidate reusable macro.
-  - **Documentation Artifact:** `docs/architecture/audio_benchmark.md`
-  - **Pass-to-Complete Gate:** Successfully discovers and solves audio target, extracting a valid 2-operator macro primitive.
+- [ ] Task 2.4: Synthetic Paired Dataset Harvester (Independent Model Extraction)
+  - **Objective:** Harvest ground-truth data from PCFG to create 100% independent datasets for the 3-Tier neural models (Model 1: Multiset of primitives+depth, Model 2: AST topology, Model 3: Continuous $\Theta$).
+  - **Automated Test Definition:** `pytest -v tests/data/test_harvester.py`
+  - **Pass-to-Complete Gate:** Extracts completely valid supervised labels for PDE, TGC, and FPO targets.
 
 - [ ] Task 2.5: Phase 2 Verification & Checkpoint (Refer to workflow.md)
 
 ---
 
-## Phase 3: Pillar 2 - SDF & Material Synthesizer (3D Implicit Geometry & Shaders)
+## Phase 3: The 3-Tier Neurosymbolic Pipeline (PDE $\to$ TGC $\to$ FPO)
 
-Focus: 3D geometric analytical primitives, affine transforms, CSG boolean operators, surface sampling, procedural material/PBR texturing, and contrastive geometric loss.
+Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeline (Primitive+Depth Estimator, Topology Connector, Fast Parameter Optimizer) and benchmark Audio vs SDF learning dynamics.
 
-- [ ] Task 3.1: 3D SDF Primitives, Transforms & PBR Materials Library
-  - **Objective:** Implement vectorized 3D SDF primitives (`Sphere`, `Box`, `Cylinder`, `Torus`), Affine Transforms (`Translate`, `Rotate`, `Scale`), CSG Combinators (`Union`, `Difference`, `SmoothUnion`), and procedural material/PBR texturing nodes (color, roughness, bump/normal maps).
-  - **Bottleneck Mitigation:** Vectorized NumPy coordinates evaluation; accepts $(N, 3)$ points and returns $(N,)$ distance array and $(N, 3)$ material properties.
-  - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_primitives.py`
-    - Invariants: Analytical distance verification matches exact mathematical formulations within $\epsilon = 10^{-5}$.
-  - **Documentation Artifact:** `docs/architecture/sdf_primitives.md`
-  - **Pass-to-Complete Gate:** 100% test pass across all primitive shapes and spatial transformations.
+- [ ] Task 3.1: Model 1 (PDE) - Primitive & Hierarchical Depth Estimator
+  - **Objective:** Implement the PDE neural architecture that maps an observation $x$ (audio or SDF) to a multiset of primitives and their AST depth levels $\{(p_i, \ell_i)\}$.
+  - **Automated Test Definition:** `pytest -v tests/models/test_pde.py`
+  - **Pass-to-Complete Gate:** Model trains to $\ge 90\%$ F1-score on synthetic Level 2/3 primitive identification.
 
-- [ ] Task 3.2: Surface Sampling, Raymarching & Contrastive Geometric Loss
-  - **Objective:** Implement $\varepsilon$-boundary surface point sampling, normal computation via finite differences, and contrastive geometric loss against distractor geometries.
-  - **Bottleneck Mitigation:** Fast stratified sampling near bounding boxes; no heavy GPU shaders required for CPU verification.
-  - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_loss.py`
-    - Invariants: Surface point error approaches zero for matching shapes; separates geometrically disjoint shapes under InfoNCE.
-  - **Documentation Artifact:** `docs/architecture/sdf_perceptual_loss.md`
-  - **Pass-to-Complete Gate:** Contrastive loss separates sphere from cube with margin $> 2.0$.
+- [ ] Task 3.2: Model 2 (TGC) - Topology & Grammar Connector
+  - **Objective:** Implement the TGC module which acts as an informed structural assembler, taking the predicted multiset $\{(p_i, \ell_i)\}$ and resolving the valid topological DAG $G$ via constrained beam search.
+  - **Automated Test Definition:** `pytest -v tests/models/test_tgc.py`
+  - **Pass-to-Complete Gate:** Assembly solves valid ASTs from shuffled multiset predictions in $< 50$ ms.
 
-- [ ] Task 3.3: SDF PCFG Domain Grammar & Procedural 3D Shape Generator
-  - **Objective:** Instantiate the geometric PCFG grammar with non-empty intersection and spatial containment constraints to generate valid synthetic 3D CAD benchmarks.
-  - **Bottleneck Mitigation:** Bounding box overlap pre-filtering prevents generation of disjoint boolean operations.
-  - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_pcfg.py`
-    - Invariants: All generated SDF programs have non-empty surface boundaries within $[-2, 2]^3$.
-  - **Documentation Artifact:** `docs/architecture/sdf_pcfg_grammar.md`
-  - **Pass-to-Complete Gate:** Generates 100 non-degenerate 3D geometric tasks.
+- [ ] Task 3.3: Model 3 (FPO) - Fast Differentiable Parameter Optimizer
+  - **Objective:** Implement the final continuous parameter estimator, predicting warm-start $\Theta_0$ and executing fast gradient backprop over InfoNCE loss via PyTorch Autograd.
+  - **Automated Test Definition:** `pytest -v tests/models/test_fpo.py`
+  - **Pass-to-Complete Gate:** Gradient descent converges in $\le 30$ steps for known geometries/audio signals.
 
-- [ ] Task 3.4: SDF Abstraction Discovery Benchmark (CSGNet, ABC CAD & MatSynth)
-  - **Objective:** Synthesize composite shapes (e.g., Flanged Cylinder, Chamfered Hollow Box, Procedural Textures) and extract geometric macro-primitives.
-  - **Bottleneck Mitigation:** Local beam search solving shapes in < 10 seconds.
-  - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_synthesis_benchmark.py`
-    - Invariants: Successfully synthesizes target hollow shape and extracts reusable CSG macro.
-  - **Documentation Artifact:** `docs/architecture/sdf_benchmark.md`
-  - **Pass-to-Complete Gate:** Solves hollow shape and extracts a valid compound primitive.
+- [ ] Task 3.4: Complexity-Ordered Curriculum Benchmark (Audio vs SDF)
+  - **Objective:** Run the full 3-Tier pipeline on Curriculum Levels 1 through 3 for both Audio and SDF simultaneously to benchmark which domain exhibits higher learning difficulty.
+  - **Automated Test Definition:** `pytest -v tests/benchmarks/test_curriculum_benchmark.py`
+  - **Pass-to-Complete Gate:** Benchmark script runs end-to-end and outputs comparative learning curves (loss vs curriculum depth).
 
 - [ ] Task 3.5: Phase 3 Verification & Checkpoint (Refer to workflow.md)
 
