@@ -98,10 +98,18 @@ class LeanBridge:
                 check=True,
             )
         except subprocess.TimeoutExpired as exc:
+            logger.error(
+                "Lean CLI execution timed out: cmd=%s, timeout=%s, input_len=%d",
+                cmd, timeout, len(input_data or "")
+            )
             raise TimeoutError(
                 f"Lean CLI execution timed out after {timeout}s: cmd={cmd}, input_len={len(input_data or '')}"
             ) from exc
         except subprocess.CalledProcessError as exc:
+            logger.error(
+                "Lean CLI failed: cmd=%s, returncode=%d, stdout=%s, stderr=%s",
+                cmd, exc.returncode, exc.stdout, exc.stderr
+            )
             raise RuntimeError(
                 f"Lean CLI failed (exit {exc.returncode}): stdout={exc.stdout!r}, stderr={exc.stderr!r}, cmd={cmd}"
             ) from exc

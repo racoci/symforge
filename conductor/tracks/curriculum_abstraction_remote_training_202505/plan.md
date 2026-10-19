@@ -57,7 +57,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
   - **Documentation Artifact:** `docs/architecture/pcfg_generator.md`
   - **Pass-to-Complete Gate:** Generates 500 valid synthetic derivations without infinite recursive loops or type violations.
 
-- [ ] Task 1.5: Differentiable Contrastive Perceptual Loss Engine
+- [x] Task 1.5: Differentiable Contrastive Perceptual Loss Engine
   - **Objective:** Implement the domain-agnostic `ContrastivePerceptualLoss` interface and InfoNCE calculation against positive targets and hard negative distractors, integrated with compiled hardware cost $C_H(G)$.
   - **Bottleneck Mitigation:** Vectorized NumPy / SciPy computation with PyTorch autograd bridge.
   - **Automated Test Definition:** `pytest -v tests/eval/test_contrastive_loss.py tests/eval/test_cost_model.py`
@@ -65,7 +65,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
   - **Documentation Artifact:** `docs/architecture/contrastive_perceptual_loss.md`
   - **Pass-to-Complete Gate:** InfoNCE loss reaches near-zero for identical embeddings and penalizes orthogonal distractors with verified gradients.
 
-- [ ] Task 1.6: Type-Guided Beam & A* Synthesizer with Hole Expansion
+- [x] Task 1.6: Type-Guided Beam & A* Synthesizer with Hole Expansion
   - **Objective:** Implement type-safe hole replacement and prioritized beam/A* search exploring partial programs under cost budgets.
   - **Bottleneck Mitigation:** Uses pluggable heuristic scorer interface, allowing uniform or heuristic priors before neural models are attached.
   - **Automated Test Definition:** `pytest -v tests/search/test_synthesizer.py`
@@ -73,7 +73,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
   - **Documentation Artifact:** `docs/architecture/synthesizer_search.md`
   - **Pass-to-Complete Gate:** Synthesizer solves baseline target problems within 200 expansion steps.
 
-- [ ] Task 1.7: Phase 1 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 1.7: Phase 1 Verification & Checkpoint (Refer to workflow.md)
 
 ---
 
