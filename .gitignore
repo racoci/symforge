@@ -36,6 +36,13 @@ CMakeFiles/
 # Rust / Cargo artifacts
 target/
 
+# Lean 4 / Lake artifacts
+.lake/
+*.olean
+*.ilean
+*.c
+
+
 # Virtual environments
 .env
 .venv
