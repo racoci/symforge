@@ -1,5 +1,6 @@
 import SymforgeIr.Types
 import SymforgeIr.Properties
+import SymforgeIr.Transpiler
 import Lean.Data.Json
 
 open SymforgeIr
@@ -8,7 +9,7 @@ open Lean
 def main (args : List String) : IO UInt32 := do
   if args.isEmpty then
     IO.println "SymForge Lean 4 IR CLI"
-    IO.println "Usage: symforge_cli [check | example-audio | example-sdf]"
+    IO.println "Usage: symforge_cli [check | example-audio | example-sdf | parse-audio | parse-sdf | transpile-audio | transpile-sdf]"
     return 0
 
   match args.head! with
@@ -63,6 +64,46 @@ def main (args : List String) : IO UInt32 := do
           ("size", Json.num node.size),
           ("depth", Json.num node.depth),
           ("paramCount", Json.num node.collectParams.length)
+        ]
+        IO.println res.compress
+        return 0
+  | "transpile-audio" =>
+    let stdin ← IO.getStdin
+    let input ← stdin.readToEnd
+    match Json.parse input with
+    | Except.error err =>
+      IO.eprintln s!"JSON parse error: {err}"
+      return 1
+    | Except.ok json =>
+      match (fromJson? json : Except String AudioNode) with
+      | Except.error err =>
+        IO.eprintln s!"AudioNode decode error: {err}"
+        return 2
+      | Except.ok node =>
+        let expr := node.toPyTorchExpr
+        let res : Json := Json.mkObj [
+          ("status", Json.str "ok"),
+          ("code", Json.str expr)
+        ]
+        IO.println res.compress
+        return 0
+  | "transpile-sdf" =>
+    let stdin ← IO.getStdin
+    let input ← stdin.readToEnd
+    match Json.parse input with
+    | Except.error err =>
+      IO.eprintln s!"JSON parse error: {err}"
+      return 1
+    | Except.ok json =>
+      match (fromJson? json : Except String SDFNode) with
+      | Except.error err =>
+        IO.eprintln s!"SDFNode decode error: {err}"
+        return 2
+      | Except.ok node =>
+        let expr := node.toPyTorchExpr
+        let res : Json := Json.mkObj [
+          ("status", Json.str "ok"),
+          ("code", Json.str expr)
         ]
         IO.println res.compress
         return 0
