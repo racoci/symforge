@@ -49,7 +49,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
   - **Documentation Artifact:** `docs/architecture/lean4_transpiler.md`
   - **Pass-to-Complete Gate:** Transpiled PyTorch modules for audio and SDF primitives match reference outputs within $\epsilon = 10^{-5}$.
 
-- [ ] Task 1.4: PCFG & Context-Sensitive Synthetic Task Generator
+- [x] Task 1.4: PCFG & Context-Sensitive Synthetic Task Generator [2cff1c3]
   - **Objective:** Build the general probabilistic grammar engine (`PCFGTaskGenerator`) capable of sampling procedural target programs and synthesizing evaluation sets under contextual validity rules.
   - **Bottleneck Mitigation:** In-memory stochastic derivation generator with seeded determinism for testing.
   - **Automated Test Definition:** `pytest -v tests/core/test_pcfg_generator.py`
