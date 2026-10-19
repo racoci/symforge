@@ -77,9 +77,9 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
 
 ---
 
-## Phase 2: Paired Domain Primitives & Differentiable Renderers (Audio 1D + SDF 3D)
+## Phase 2: Paired Domain Primitives, AST Extraction & Filtered Data Pipelines (Audio 1D + SDF 3D)
 
-Focus: Implement the complete sets of procedural primitives and differentiable perceptual loss evaluators for both Audio and SDF in parallel to enable cross-domain benchmarking.
+Focus: Implement procedural primitives, differentiable perceptual loss evaluators, Tree-sitter AST normalizers for real-world code (OpenSCAD, Dexed/Faust), and procedural PCFG generators with triple quality filtering (Physical, Perceptual Entropy, Semantic Deduplication) to mitigate the synthetic prior trap.
 
 - [ ] Task 2.1: Audio 1D DSP Primitives & Multi-scale STFT Extractor
   - **Objective:** Implement pure functional 1D DSP primitives (Oscillators, Envelopes, Modulators, Filters) and the multi-resolution STFT contrastive loss extractor.
@@ -91,17 +91,17 @@ Focus: Implement the complete sets of procedural primitives and differentiable p
   - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_primitives.py tests/sdf/test_sdf_loss.py`
   - **Pass-to-Complete Gate:** 100% test pass on shape distances; Loss completely separates disjoint geometric shapes.
 
-- [ ] Task 2.3: Procedural Complexity-Stratified PCFG Generators (Audio & SDF)
-  - **Objective:** Instantiate PCFG grammar constraints for both domains supporting 5 discrete Levels of Complexity (Curriculum Level 1 to 5).
+- [ ] Task 2.3: Procedural PCFG with Triple Quality Filtering & Complexity Stratification
+  - **Objective:** Implement PCFG sampling with Triple Quality Filtering (Physical Validity, Perceptual Entropy, and Semantic DAG Deduplication) across 5 discrete complexity levels to prevent the self-mimicry trap.
   - **Automated Test Definition:** `pytest -v tests/core/test_pcfg_curriculum.py`
-  - **Pass-to-Complete Gate:** Generates distinct complexity layers (from isolated primitives up to 5+ deep composite DAGs) without type/physical violations.
+  - **Pass-to-Complete Gate:** Rejects trivial/silent programs; generates 100 non-degenerate derivations per complexity level.
 
-- [ ] Task 2.4: Synthetic Paired Dataset Harvester (Independent Model Extraction)
-  - **Objective:** Harvest ground-truth data from PCFG to create 100% independent datasets for the 3-Tier neural models (Model 1: Multiset of primitives+depth, Model 2: AST topology, Model 3: Continuous $\Theta$).
-  - **Automated Test Definition:** `pytest -v tests/data/test_harvester.py`
-  - **Pass-to-Complete Gate:** Extracts completely valid supervised labels for PDE, TGC, and FPO targets.
+- [ ] Task 2.4: Domain Code Normalizer & Supervised Production Tuple Harvester
+  - **Objective:** Build ingestion normalizers (OpenSCAD CST $\to$ AST, Dexed/Faust $\to$ AST) and the Supervised Production Extractor exporting tuples `(nonterminal, production, parent_context, expected_type, free_params)` for PCFG/PHOG training.
+  - **Automated Test Definition:** `pytest -v tests/data/test_harvester.py tests/data/test_normalizer.py`
+  - **Pass-to-Complete Gate:** Parses sample OpenSCAD and Dexed JSON patches into valid Lean 4 ASTs; extracts valid production decision tuples.
 
-- [ ] Task 2.5: Phase 2 Verification & Checkpoint (Refer to workflow.md)
+- [ ] Task 2.5: Phase 2 Verification & Baseline PCFG vs. PHOG Comparison (Refer to workflow.md)
 
 ---
 
