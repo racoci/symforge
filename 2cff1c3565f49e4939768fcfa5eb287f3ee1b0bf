@@ -1,0 +1,6 @@
+Task 1.4 Complete:
+- Implemented PCFGTaskGenerator with weighted production rules for audio and SDF domains.
+- Integrated strict depth bounding and terminal rule pruning to eliminate recursion overflows.
+- Added comprehensive unit tests in tests/core/test_pcfg_generator.py.
+- Verified generation of 500 valid synthetic derivations without type errors or infinite loops.
+- Documented in docs/architecture/pcfg_generator.md.
