@@ -81,7 +81,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
 
 Focus: Implement procedural primitives, differentiable perceptual loss evaluators, Tree-sitter AST normalizers for real-world code (OpenSCAD, Dexed/Faust), and procedural PCFG generators with triple quality filtering (Physical, Perceptual Entropy, Semantic Deduplication) to mitigate the synthetic prior trap.
 
-- [ ] Task 2.1: Audio 1D DSP Primitives & Multi-scale STFT Extractor
+- [x] Task 2.1: Audio 1D DSP Primitives & Multi-scale STFT Extractor
   - **Objective:** Implement pure functional 1D DSP primitives (Oscillators, Envelopes, Modulators, Filters) and the multi-resolution STFT contrastive loss extractor.
   - **Automated Test Definition:** `pytest -v tests/audio/test_dsp_primitives.py tests/audio/test_audio_loss.py`
   - **Pass-to-Complete Gate:** All primitives pass analytical waveform tests; STFT discriminates Timbre differences.
