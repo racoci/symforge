@@ -90,9 +90,9 @@ logs/
 *.onnx
 
 # Data & cache directories
-data/
-datasets/
-cache/
+/data/
+/datasets/
+/cache/
 
 # Editor / IDE settings
 .vscode/

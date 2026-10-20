@@ -97,9 +97,10 @@ Focus: Implement procedural primitives, differentiable perceptual loss evaluator
   - **Documentation Artifact:** `docs/architecture/pcfg_curriculum_filtering.md`
   - **Pass-to-Complete Gate:** Rejects trivial/silent programs; generates 100 non-degenerate derivations per complexity level.
 
-- [ ] Task 2.4: Domain Code Normalizer & Supervised Production Tuple Harvester
+- [x] Task 2.4: Domain Code Normalizer & Supervised Production Tuple Harvester
   - **Objective:** Build ingestion normalizers (OpenSCAD CST $\to$ AST, Dexed/Faust $\to$ AST) and the Supervised Production Extractor exporting tuples `(nonterminal, production, parent_context, expected_type, free_params)` for PCFG/PHOG training.
   - **Automated Test Definition:** `pytest -v tests/data/test_harvester.py tests/data/test_normalizer.py`
+  - **Documentation Artifact:** `docs/architecture/data_normalizer_and_harvester.md`
   - **Pass-to-Complete Gate:** Parses sample OpenSCAD and Dexed JSON patches into valid Lean 4 ASTs; extracts valid production decision tuples.
 
 - [ ] Task 2.5: Phase 2 Verification & Baseline PCFG vs. PHOG Comparison (Refer to workflow.md)
