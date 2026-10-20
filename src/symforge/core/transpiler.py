@@ -86,7 +86,8 @@ class DifferentiableAudioModule(DifferentiableProgram):
 
         if isinstance(node, NoiseNode):
             g = torch.Generator().manual_seed(node.seed)
-            return torch.randn(t.shape, generator=g, device=t.device, dtype=t.dtype)
+            noise = torch.rand(t.shape, generator=g, device=t.device, dtype=t.dtype) * 2.0 - 1.0
+            return torch.clamp(noise, -1.0, 1.0)
 
         if isinstance(node, ADSRNode):
             att = self.get_param(node.attack)

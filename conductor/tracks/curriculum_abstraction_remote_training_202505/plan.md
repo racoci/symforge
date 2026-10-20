@@ -91,9 +91,10 @@ Focus: Implement procedural primitives, differentiable perceptual loss evaluator
   - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_primitives.py tests/sdf/test_sdf_loss.py`
   - **Pass-to-Complete Gate:** 100% test pass on shape distances; Loss completely separates disjoint geometric shapes.
 
-- [ ] Task 2.3: Procedural PCFG with Triple Quality Filtering & Complexity Stratification
+- [x] Task 2.3: Procedural PCFG with Triple Quality Filtering & Complexity Stratification
   - **Objective:** Implement PCFG sampling with Triple Quality Filtering (Physical Validity, Perceptual Entropy, and Semantic DAG Deduplication) across 5 discrete complexity levels to prevent the self-mimicry trap.
   - **Automated Test Definition:** `pytest -v tests/core/test_pcfg_curriculum.py`
+  - **Documentation Artifact:** `docs/architecture/pcfg_curriculum_filtering.md`
   - **Pass-to-Complete Gate:** Rejects trivial/silent programs; generates 100 non-degenerate derivations per complexity level.
 
 - [ ] Task 2.4: Domain Code Normalizer & Supervised Production Tuple Harvester

@@ -30,6 +30,15 @@ from symforge.core.ast import (
     DifferenceNode,
     FreeParam,
 )
+from symforge.core.curriculum import (
+    CurriculumLevel,
+    CurriculumSampler,
+    FilterResult,
+    PhysicalValidityFilter,
+    PerceptualEntropyFilter,
+    SemanticDeduplicationFilter,
+    TripleQualityFilter,
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +102,20 @@ class PCFGTaskGenerator:
         """Sample a valid AST derivation tree from the grammar within depth bounds."""
         start_symbol = "AudioExp" if self.domain == "audio" else "SDFExp"
         return self._expand(start_symbol, current_depth=1, max_depth=max_depth)
+
+    def sample_level(
+        self,
+        level: Union[CurriculumLevel, int, str],
+        enable_filtering: bool = True,
+        max_attempts: int = 100,
+    ) -> ASTNode:
+        """Sample a validated curriculum derivation at the specified complexity level."""
+        sampler = CurriculumSampler(
+            domain=self.domain,
+            seed=self.rng.randint(0, 1000000),
+            enable_filtering=enable_filtering,
+        )
+        return sampler.sample_level(level, max_attempts=max_attempts)
 
     def _expand(self, symbol: str, current_depth: int, max_depth: int) -> ASTNode:
         matching_rules = [r for r in self.rules if r.lhs == symbol]
