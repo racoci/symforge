@@ -86,7 +86,7 @@ Focus: Implement procedural primitives, differentiable perceptual loss evaluator
   - **Automated Test Definition:** `pytest -v tests/audio/test_dsp_primitives.py tests/audio/test_audio_loss.py`
   - **Pass-to-Complete Gate:** All primitives pass analytical waveform tests; STFT discriminates Timbre differences.
 
-- [ ] Task 2.2: SDF 3D CSG Primitives & Surface/Raymarching Extractor
+- [x] Task 2.2: SDF 3D CSG Primitives & Surface/Raymarching Extractor
   - **Objective:** Implement 3D SDF primitives (Sphere, Box, Cylinder, etc.), spatial transforms, CSG booleans, and the $\varepsilon$-boundary surface contrastive geometric loss extractor.
   - **Automated Test Definition:** `pytest -v tests/sdf/test_sdf_primitives.py tests/sdf/test_sdf_loss.py`
   - **Pass-to-Complete Gate:** 100% test pass on shape distances; Loss completely separates disjoint geometric shapes.
