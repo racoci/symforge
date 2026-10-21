@@ -164,7 +164,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/remote_compute_providers.md`
   - **Pass-to-Complete Gate:** Unit tests pass with simulated network failure scenarios and verified clean client severance.
 
-- [ ] Task 4.4: Modular LoRA Adapter Registry & Local CPU Inference Loader
+- [x] Task 4.4: Modular LoRA Adapter Registry & Local CPU Inference Loader
   - **Objective:** Create the `LoRAAdapterRegistry` to manage domain-specific adapters (`audio_modulators`, `audio_filters`, `sdf_csg`, `sdf_blends`) and load lightweight PEFT tensors into the local CPU prior evaluator.
   - **Bottleneck Mitigation:** Adapters are modular and small (< 15 MB); base model remains frozen; inference runs on CPU in milliseconds.
   - **Automated Test Definition:** `pytest -v tests/adapters/test_lora_registry.py`
