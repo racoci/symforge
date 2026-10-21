@@ -122,7 +122,7 @@ Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeli
   - **Documentation Artifact:** `docs/architecture/tgc_model.md`
   - **Pass-to-Complete Gate:** Assembly solves valid ASTs from shuffled multiset predictions in $< 50$ ms.
 
-- [ ] Task 3.3: Model 3 (FPO) - Fast Differentiable Parameter Optimizer
+- [x] Task 3.3: Model 3 (FPO) - Fast Differentiable Parameter Optimizer
   - **Objective:** Implement the final continuous parameter estimator, predicting warm-start $\Theta_0$ and executing fast gradient backprop over InfoNCE loss via PyTorch Autograd.
   - **Automated Test Definition:** `pytest -v tests/models/test_fpo.py`
   - **Pass-to-Complete Gate:** Gradient descent converges in $\le 30$ steps for known geometries/audio signals.

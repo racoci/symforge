@@ -1,5 +1,13 @@
 """Neurosymbolic Neural Models for SymForge (PDE, TGC, FPO)."""
 
+from symforge.models.fpo import (
+    FPO,
+    FastParameterOptimizer,
+    OptimizationResult,
+    WarmStartRegressor,
+    batch_optimize,
+    optimize,
+)
 from symforge.models.pde import (
     AUDIO_VOCABULARY,
     DOMAIN_VOCABULARIES,
@@ -34,4 +42,10 @@ __all__ = [
     "TGC",
     "assemble",
     "batch_assemble",
+    "FastParameterOptimizer",
+    "FPO",
+    "WarmStartRegressor",
+    "OptimizationResult",
+    "optimize",
+    "batch_optimize",
 ]
