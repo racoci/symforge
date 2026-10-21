@@ -1,0 +1,1 @@
+Task 2.5: Implemented PCFGModel and PHOGModel with Dirichlet smoothing and Jelinek-Mercer hierarchical backoff. Verified that PHOGModel strictly outperforms PCFGModel in perplexity on correlated CAD and Audio datasets.
