@@ -140,7 +140,7 @@ Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeli
 
 Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates away from the local workstation into a pluggable remote compute protocol.
 
-- [ ] Task 4.1: Pluggable ComputeProvider Protocol & Data Contracts
+- [x] Task 4.1: Pluggable ComputeProvider Protocol & Data Contracts
   - **Objective:** Define the asynchronous `ComputeProvider` protocol and Pydantic schemas for `TrainingPayload`, `RemoteJobConfig`, `JobStatusResponse`, and `AdapterArtifact`.
   - **Bottleneck Mitigation:** Pure protocol definition; decouples local synthesis engine from any specific cloud provider SDK.
   - **Automated Test Definition:** `pytest -v tests/compute/test_contracts.py`
