@@ -243,6 +243,44 @@ class FMNode(AudioNode):
         }
 
 
+@dataclass(frozen=True)
+class ExpDecayNode(AudioNode):
+    decay_time: FreeParam
+    input_node: AudioNode
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.input_node,)
+
+    def _free_param_fields(self) -> List[FreeParam]:
+        return [self.decay_time]
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "expDecay": {
+                "decayTime": self.decay_time.to_dict(),
+                "input": self.input_node.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class LFONode(AudioNode):
+    freq: FreeParam
+    amount: FreeParam = field(default_factory=lambda: FreeParam("amount_0", 0.0, 1.0, 0.5))
+
+    def _free_param_fields(self) -> List[FreeParam]:
+        return [self.freq, self.amount]
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "lfo": {
+                "freq": self.freq.to_dict(),
+                "amount": self.amount.to_dict(),
+            }
+        }
+
+
 # ==========================================
 # 3D SDF Domain Nodes
 # ==========================================
@@ -313,6 +351,27 @@ class TorusNode(SDFNode):
             "torus": {
                 "majorRadius": self.major_radius.to_dict(),
                 "minorRadius": self.minor_radius.to_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class PlaneNode(SDFNode):
+    nx: FreeParam = field(default_factory=lambda: FreeParam("nx_0", -1.0, 1.0, 0.0))
+    ny: FreeParam = field(default_factory=lambda: FreeParam("ny_0", -1.0, 1.0, 1.0))
+    nz: FreeParam = field(default_factory=lambda: FreeParam("nz_0", -1.0, 1.0, 0.0))
+    offset: FreeParam = field(default_factory=lambda: FreeParam("offset_0", -5.0, 5.0, 0.0))
+
+    def _free_param_fields(self) -> List[FreeParam]:
+        return [self.nx, self.ny, self.nz, self.offset]
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "plane": {
+                "nx": self.nx.to_dict(),
+                "ny": self.ny.to_dict(),
+                "nz": self.nz.to_dict(),
+                "offset": self.offset.to_dict(),
             }
         }
 
@@ -404,6 +463,18 @@ class UnionNode(SDFNode):
     def to_lean_dict(self) -> Dict[str, Any]:
         return {
             "union": {
+                "smoothness": self.smoothness.to_dict(),
+                "a": self.a.to_lean_dict(),
+                "b": self.b.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class SmoothUnionNode(UnionNode):
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "smoothUnion": {
                 "smoothness": self.smoothness.to_dict(),
                 "a": self.a.to_lean_dict(),
                 "b": self.b.to_lean_dict(),
@@ -513,6 +584,11 @@ def substitute_hole(node: ASTNode, hole_id: str, replacement: ASTNode) -> ASTNod
             release=node.release,
             gate=substitute_hole(node.gate, hole_id, replacement),  # type: ignore
         )
+    if isinstance(node, ExpDecayNode):
+        return ExpDecayNode(
+            decay_time=node.decay_time,
+            input_node=substitute_hole(node.input_node, hole_id, replacement),  # type: ignore
+        )
     if isinstance(node, LowPassNode):
         return LowPassNode(
             cutoff=node.cutoff,
@@ -550,6 +626,12 @@ def substitute_hole(node: ASTNode, hole_id: str, replacement: ASTNode) -> ASTNod
         return ScaleNode(
             s=node.s,
             child=substitute_hole(node.child, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, SmoothUnionNode):
+        return SmoothUnionNode(
+            smoothness=node.smoothness,
+            a=substitute_hole(node.a, hole_id, replacement),  # type: ignore
+            b=substitute_hole(node.b, hole_id, replacement),  # type: ignore
         )
     if isinstance(node, UnionNode):
         return UnionNode(
@@ -627,6 +709,16 @@ def update_ast_params(node: ASTNode, param_values: Dict[str, float]) -> ASTNode:
             mod_freq=_update_param(node.mod_freq, param_values),
             mod_index=_update_param(node.mod_index, param_values),
         )
+    if isinstance(node, ExpDecayNode):
+        return ExpDecayNode(
+            decay_time=_update_param(node.decay_time, param_values),
+            input_node=update_ast_params(node.input_node, param_values),  # type: ignore
+        )
+    if isinstance(node, LFONode):
+        return LFONode(
+            freq=_update_param(node.freq, param_values),
+            amount=_update_param(node.amount, param_values),
+        )
     if isinstance(node, SphereNode):
         return SphereNode(radius=_update_param(node.radius, param_values))
     if isinstance(node, BoxNode):
@@ -644,6 +736,13 @@ def update_ast_params(node: ASTNode, param_values: Dict[str, float]) -> ASTNode:
         return TorusNode(
             major_radius=_update_param(node.major_radius, param_values),
             minor_radius=_update_param(node.minor_radius, param_values),
+        )
+    if isinstance(node, PlaneNode):
+        return PlaneNode(
+            nx=_update_param(node.nx, param_values),
+            ny=_update_param(node.ny, param_values),
+            nz=_update_param(node.nz, param_values),
+            offset=_update_param(node.offset, param_values),
         )
     if isinstance(node, TranslateNode):
         return TranslateNode(
@@ -663,6 +762,12 @@ def update_ast_params(node: ASTNode, param_values: Dict[str, float]) -> ASTNode:
         return ScaleNode(
             s=_update_param(node.s, param_values),
             child=update_ast_params(node.child, param_values),  # type: ignore
+        )
+    if isinstance(node, SmoothUnionNode):
+        return SmoothUnionNode(
+            smoothness=_update_param(node.smoothness, param_values),
+            a=update_ast_params(node.a, param_values),  # type: ignore
+            b=update_ast_params(node.b, param_values),  # type: ignore
         )
     if isinstance(node, UnionNode):
         return UnionNode(
@@ -747,6 +852,16 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
             mod_freq=FreeParam.from_dict(fields["modFreq"]),
             mod_index=FreeParam.from_dict(fields["modIndex"]),
         )
+    if tag == "expDecay":
+        return ExpDecayNode(
+            decay_time=FreeParam.from_dict(fields["decayTime"]),
+            input_node=deserialize_node(fields["input"]),  # type: ignore
+        )
+    if tag == "lfo":
+        return LFONode(
+            freq=FreeParam.from_dict(fields["freq"]),
+            amount=FreeParam.from_dict(fields["amount"]),
+        )
 
     # SDF nodes
     if tag == "sphere":
@@ -766,6 +881,13 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
         return TorusNode(
             major_radius=FreeParam.from_dict(fields["majorRadius"]),
             minor_radius=FreeParam.from_dict(fields["minorRadius"]),
+        )
+    if tag == "plane":
+        return PlaneNode(
+            nx=FreeParam.from_dict(fields["nx"]),
+            ny=FreeParam.from_dict(fields["ny"]),
+            nz=FreeParam.from_dict(fields["nz"]),
+            offset=FreeParam.from_dict(fields["offset"]),
         )
     if tag == "translate":
         return TranslateNode(
@@ -788,6 +910,12 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
         )
     if tag == "union":
         return UnionNode(
+            smoothness=FreeParam.from_dict(fields["smoothness"]),
+            a=deserialize_node(fields["a"]),  # type: ignore
+            b=deserialize_node(fields["b"]),  # type: ignore
+        )
+    if tag == "smoothUnion":
+        return SmoothUnionNode(
             smoothness=FreeParam.from_dict(fields["smoothness"]),
             a=deserialize_node(fields["a"]),  # type: ignore
             b=deserialize_node(fields["b"]),  # type: ignore

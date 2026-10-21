@@ -75,10 +75,10 @@ def dag_to_ast(dag: DAGNode) -> ASTNode:
     new_fields = dict(fields)
     if tag in ("translate", "rotate", "scale"):
         new_fields["child"] = serialize_node(reconstructed_children[0])
-    elif tag in ("union", "intersection", "difference"):
+    elif tag in ("union", "smoothUnion", "intersection", "difference"):
         new_fields["a"] = serialize_node(reconstructed_children[0])
         new_fields["b"] = serialize_node(reconstructed_children[1])
-    elif tag in ("adsr", "lowpass", "gain"):
+    elif tag in ("adsr", "lowpass", "gain", "expDecay"):
         child_key = "gate" if tag == "adsr" else "input"
         new_fields[child_key] = serialize_node(reconstructed_children[0])
     elif tag == "mix":

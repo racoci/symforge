@@ -116,9 +116,10 @@ Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeli
   - **Automated Test Definition:** `pytest -v tests/models/test_pde.py`
   - **Pass-to-Complete Gate:** Model trains to $\ge 90\%$ F1-score on synthetic Level 2/3 primitive identification.
 
-- [ ] Task 3.2: Model 2 (TGC) - Topology & Grammar Connector
+- [x] Task 3.2: Model 2 (TGC) - Topology & Grammar Connector
   - **Objective:** Implement the TGC module which acts as an informed structural assembler, taking the predicted multiset $\{(p_i, \ell_i)\}$ and resolving the valid topological DAG $G$ via constrained beam search.
   - **Automated Test Definition:** `pytest -v tests/models/test_tgc.py`
+  - **Documentation Artifact:** `docs/architecture/tgc_model.md`
   - **Pass-to-Complete Gate:** Assembly solves valid ASTs from shuffled multiset predictions in $< 50$ ms.
 
 - [ ] Task 3.3: Model 3 (FPO) - Fast Differentiable Parameter Optimizer

@@ -18,15 +18,19 @@ from symforge.core.ast import (
     GainNode,
     MixNode,
     FMNode,
+    ExpDecayNode,
+    LFONode,
     SDFNode,
     SphereNode,
     BoxNode,
     CylinderNode,
     TorusNode,
+    PlaneNode,
     TranslateNode,
     RotateNode,
     ScaleNode,
     UnionNode,
+    SmoothUnionNode,
     IntersectionNode,
     DifferenceNode,
     FreeParam,
@@ -121,6 +125,17 @@ class DifferentiableAudioModule(DifferentiableProgram):
             modulator = mi * torch.sin(2.0 * math.pi * mf * t)
             return torch.sin(2.0 * math.pi * c * t + modulator)
 
+        if isinstance(node, ExpDecayNode):
+            tau = self.get_param(node.decay_time)
+            tau = torch.clamp(tau, min=0.001)
+            in_sig = self._eval(node.input_node, t)
+            return torch.exp(-t / tau) * in_sig
+
+        if isinstance(node, LFONode):
+            f = self.get_param(node.freq)
+            amt = self.get_param(node.amount)
+            return amt * torch.sin(2.0 * math.pi * f * t)
+
         raise TypeError(f"Unsupported audio node type: {type(node)}")
 
     def _adsr_envelope(
@@ -195,6 +210,15 @@ class DifferentiableSDFModule(DifferentiableProgram):
             q_x = torch.norm(p[..., :2], dim=-1) - r1
             q_y = p[..., 2]
             return torch.norm(torch.stack([q_x, q_y], dim=-1), dim=-1) - r2
+
+        if isinstance(node, PlaneNode):
+            nx = self.get_param(node.nx)
+            ny = self.get_param(node.ny)
+            nz = self.get_param(node.nz)
+            n = torch.stack([nx, ny, nz])
+            n_norm = n / (torch.norm(n) + 1e-6)
+            offset = self.get_param(node.offset)
+            return torch.matmul(p, n_norm) + offset
 
         if isinstance(node, TranslateNode):
             dx = self.get_param(node.dx)

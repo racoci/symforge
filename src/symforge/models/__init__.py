@@ -12,6 +12,12 @@ from symforge.models.pde import (
     predict_primitives_with_depth,
     train_pde,
 )
+from symforge.models.tgc import (
+    TGC,
+    TopologyGrammarConnector,
+    assemble,
+    batch_assemble,
+)
 
 __all__ = [
     "AUDIO_VOCABULARY",
@@ -24,4 +30,8 @@ __all__ = [
     "generate_pde_dataset",
     "train_pde",
     "compute_pde_metrics",
+    "TopologyGrammarConnector",
+    "TGC",
+    "assemble",
+    "batch_assemble",
 ]
