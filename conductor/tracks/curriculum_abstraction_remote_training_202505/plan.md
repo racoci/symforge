@@ -156,7 +156,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/mock_compute_provider.md`
   - **Pass-to-Complete Gate:** Async submission and artifact fetch cycle completes in < 50ms with valid artifact checksum.
 
-- [ ] Task 4.3: Remote Serverless GPU Providers (Modal & SageMaker) with Async Resilient Loops
+- [x] Task 4.3: Remote Serverless GPU Providers (Modal & SageMaker) with Async Resilient Loops
   - **Objective:** Implement `ModalComputeProvider` and `SageMakerComputeProvider` using resilient async HTTP/Boto3 clients with hard timeouts, exponential backoff with jitter, and max poll caps.
   - **Bottleneck Mitigation:** Wrapped behind interface; all network calls have strict connection (10s) and read (30s) timeouts; resources severed in `finally` blocks.
   - **Automated Test Definition:** `pytest -v tests/compute/test_remote_providers.py`

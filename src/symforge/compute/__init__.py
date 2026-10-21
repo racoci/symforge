@@ -21,6 +21,17 @@ from symforge.compute.protocol import (
     ComputeProvider,
     verify_compute_provider_conformance,
 )
+from symforge.compute.remote_providers import (
+    DefaultHttpTransport,
+    HttpResponse,
+    HttpTransport,
+    HttpTransportError,
+    ModalComputeProvider,
+    ResilientNetworkRunner,
+    SageMakerComputeProvider,
+    SageMakerTransport,
+    resilient_async_call,
+)
 
 __all__ = [
     "AdapterArtifact",
@@ -28,6 +39,10 @@ __all__ = [
     "ComputeDomain",
     "ComputeProvider",
     "ComputeProviderError",
+    "DefaultHttpTransport",
+    "HttpResponse",
+    "HttpTransport",
+    "HttpTransportError",
     "JobExecutionError",
     "JobStatus",
     "JobStatusResponse",
@@ -35,7 +50,12 @@ __all__ = [
     "JobTimeoutError",
     "MockComputeProvider",
     "MockExecutionMode",
+    "ModalComputeProvider",
     "RemoteJobConfig",
+    "ResilientNetworkRunner",
+    "SageMakerComputeProvider",
+    "SageMakerTransport",
     "TrainingPayload",
+    "resilient_async_call",
     "verify_compute_provider_conformance",
 ]
