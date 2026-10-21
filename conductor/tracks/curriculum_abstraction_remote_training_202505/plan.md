@@ -111,7 +111,7 @@ Focus: Implement procedural primitives, differentiable perceptual loss evaluator
 
 Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeline (Primitive+Depth Estimator, Topology Connector, Fast Parameter Optimizer) and benchmark Audio vs SDF learning dynamics.
 
-- [ ] Task 3.1: Model 1 (PDE) - Primitive & Hierarchical Depth Estimator
+- [x] Task 3.1: Model 1 (PDE) - Primitive & Hierarchical Depth Estimator
   - **Objective:** Implement the PDE neural architecture that maps an observation $x$ (audio or SDF) to a multiset of primitives and their AST depth levels $\{(p_i, \ell_i)\}$.
   - **Automated Test Definition:** `pytest -v tests/models/test_pde.py`
   - **Pass-to-Complete Gate:** Model trains to $\ge 90\%$ F1-score on synthetic Level 2/3 primitive identification.
