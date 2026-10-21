@@ -107,32 +107,32 @@ Focus: Implement procedural primitives, differentiable perceptual loss evaluator
 
 ---
 
-## Phase 3: The 3-Tier Neurosymbolic Pipeline (PDE $\to$ TGC $\to$ FPO)
+## Phase 3: The 3-Tier Neurosymbolic Pipeline (PDE $\to$ TGC $\to$ FPO) [checkpoint: 72f5465]
 
 Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeline (Primitive+Depth Estimator, Topology Connector, Fast Parameter Optimizer) and benchmark Audio vs SDF learning dynamics.
 
-- [x] Task 3.1: Model 1 (PDE) - Primitive & Hierarchical Depth Estimator
+- [x] Task 3.1: Model 1 (PDE) - Primitive & Hierarchical Depth Estimator [f02476c]
   - **Objective:** Implement the PDE neural architecture that maps an observation $x$ (audio or SDF) to a multiset of primitives and their AST depth levels $\{(p_i, \ell_i)\}$.
   - **Automated Test Definition:** `pytest -v tests/models/test_pde.py`
   - **Pass-to-Complete Gate:** Model trains to $\ge 90\%$ F1-score on synthetic Level 2/3 primitive identification.
 
-- [x] Task 3.2: Model 2 (TGC) - Topology & Grammar Connector
+- [x] Task 3.2: Model 2 (TGC) - Topology & Grammar Connector [daad682]
   - **Objective:** Implement the TGC module which acts as an informed structural assembler, taking the predicted multiset $\{(p_i, \ell_i)\}$ and resolving the valid topological DAG $G$ via constrained beam search.
   - **Automated Test Definition:** `pytest -v tests/models/test_tgc.py`
   - **Documentation Artifact:** `docs/architecture/tgc_model.md`
   - **Pass-to-Complete Gate:** Assembly solves valid ASTs from shuffled multiset predictions in $< 50$ ms.
 
-- [x] Task 3.3: Model 3 (FPO) - Fast Differentiable Parameter Optimizer
+- [x] Task 3.3: Model 3 (FPO) - Fast Differentiable Parameter Optimizer [fcfe3eb]
   - **Objective:** Implement the final continuous parameter estimator, predicting warm-start $\Theta_0$ and executing fast gradient backprop over InfoNCE loss via PyTorch Autograd.
   - **Automated Test Definition:** `pytest -v tests/models/test_fpo.py`
   - **Pass-to-Complete Gate:** Gradient descent converges in $\le 30$ steps for known geometries/audio signals.
 
-- [x] Task 3.4: Complexity-Ordered Curriculum Benchmark (Audio vs SDF)
+- [x] Task 3.4: Complexity-Ordered Curriculum Benchmark (Audio vs SDF) [72f5465]
   - **Objective:** Run the full 3-Tier pipeline on Curriculum Levels 1 through 3 for both Audio and SDF simultaneously to benchmark which domain exhibits higher learning difficulty.
   - **Automated Test Definition:** `pytest -v tests/benchmarks/test_curriculum_benchmark.py`
   - **Pass-to-Complete Gate:** Benchmark script runs end-to-end and outputs comparative learning curves (loss vs curriculum depth).
 
-- [ ] Task 3.5: Phase 3 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 3.5: Phase 3 Verification & Checkpoint (Refer to workflow.md) [72f5465]
 
 ---
 
