@@ -148,7 +148,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/compute_provider_protocol.md`
   - **Pass-to-Complete Gate:** 100% schema serialization round-trip tests pass.
 
-- [ ] Task 4.2: MockComputeProvider & Local Zero-Cost Testbed
+- [x] Task 4.2: MockComputeProvider & Local Zero-Cost Testbed
   - **Objective:** Implement `MockComputeProvider` simulating asynchronous training job submission, polling, and artifact generation in < 10ms with zero GPU usage and zero cost.
   - **Bottleneck Mitigation:** Provides a fully functional backend for local test suites and CI/CD pipelines without requiring network or cloud credentials.
   - **Automated Test Definition:** `pytest -v tests/compute/test_mock_provider.py`

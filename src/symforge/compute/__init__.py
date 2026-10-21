@@ -13,6 +13,10 @@ from symforge.compute.contracts import (
     RemoteJobConfig,
     TrainingPayload,
 )
+from symforge.compute.mock_provider import (
+    MockComputeProvider,
+    MockExecutionMode,
+)
 from symforge.compute.protocol import (
     ComputeProvider,
     verify_compute_provider_conformance,
@@ -29,6 +33,8 @@ __all__ = [
     "JobStatusResponse",
     "JobSubmissionError",
     "JobTimeoutError",
+    "MockComputeProvider",
+    "MockExecutionMode",
     "RemoteJobConfig",
     "TrainingPayload",
     "verify_compute_provider_conformance",
