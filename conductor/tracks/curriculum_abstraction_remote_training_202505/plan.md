@@ -136,11 +136,11 @@ Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeli
 
 ---
 
-## Phase 4: Decoupled Compute Provider & LoRA Layer (Zero Local Training Footprint)
+## Phase 4: Decoupled Compute Provider & LoRA Layer (Zero Local Training Footprint) [checkpoint: 2c93b16]
 
 Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates away from the local workstation into a pluggable remote compute protocol.
 
-- [x] Task 4.1: Pluggable ComputeProvider Protocol & Data Contracts
+- [x] Task 4.1: Pluggable ComputeProvider Protocol & Data Contracts [4bb59c7]
   - **Objective:** Define the asynchronous `ComputeProvider` protocol and Pydantic schemas for `TrainingPayload`, `RemoteJobConfig`, `JobStatusResponse`, and `AdapterArtifact`.
   - **Bottleneck Mitigation:** Pure protocol definition; decouples local synthesis engine from any specific cloud provider SDK.
   - **Automated Test Definition:** `pytest -v tests/compute/test_contracts.py`
@@ -148,7 +148,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/compute_provider_protocol.md`
   - **Pass-to-Complete Gate:** 100% schema serialization round-trip tests pass.
 
-- [x] Task 4.2: MockComputeProvider & Local Zero-Cost Testbed
+- [x] Task 4.2: MockComputeProvider & Local Zero-Cost Testbed [3debca1]
   - **Objective:** Implement `MockComputeProvider` simulating asynchronous training job submission, polling, and artifact generation in < 10ms with zero GPU usage and zero cost.
   - **Bottleneck Mitigation:** Provides a fully functional backend for local test suites and CI/CD pipelines without requiring network or cloud credentials.
   - **Automated Test Definition:** `pytest -v tests/compute/test_mock_provider.py`
@@ -156,7 +156,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/mock_compute_provider.md`
   - **Pass-to-Complete Gate:** Async submission and artifact fetch cycle completes in < 50ms with valid artifact checksum.
 
-- [x] Task 4.3: Remote Serverless GPU Providers (Modal & SageMaker) with Async Resilient Loops
+- [x] Task 4.3: Remote Serverless GPU Providers (Modal & SageMaker) with Async Resilient Loops [e38ed16]
   - **Objective:** Implement `ModalComputeProvider` and `SageMakerComputeProvider` using resilient async HTTP/Boto3 clients with hard timeouts, exponential backoff with jitter, and max poll caps.
   - **Bottleneck Mitigation:** Wrapped behind interface; all network calls have strict connection (10s) and read (30s) timeouts; resources severed in `finally` blocks.
   - **Automated Test Definition:** `pytest -v tests/compute/test_remote_providers.py`
@@ -164,7 +164,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/remote_compute_providers.md`
   - **Pass-to-Complete Gate:** Unit tests pass with simulated network failure scenarios and verified clean client severance.
 
-- [x] Task 4.4: Modular LoRA Adapter Registry & Local CPU Inference Loader
+- [x] Task 4.4: Modular LoRA Adapter Registry & Local CPU Inference Loader [ed0aa5d]
   - **Objective:** Create the `LoRAAdapterRegistry` to manage domain-specific adapters (`audio_modulators`, `audio_filters`, `sdf_csg`, `sdf_blends`) and load lightweight PEFT tensors into the local CPU prior evaluator.
   - **Bottleneck Mitigation:** Adapters are modular and small (< 15 MB); base model remains frozen; inference runs on CPU in milliseconds.
   - **Automated Test Definition:** `pytest -v tests/adapters/test_lora_registry.py`
@@ -172,7 +172,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
   - **Documentation Artifact:** `docs/architecture/lora_adapter_registry.md`
   - **Pass-to-Complete Gate:** Registry loads and hot-swaps simulated adapter weights without memory accumulation.
 
-- [ ] Task 4.5: Phase 4 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 4.5: Phase 4 Verification & Checkpoint (Refer to workflow.md) [2c93b16]
 
 ---
 
