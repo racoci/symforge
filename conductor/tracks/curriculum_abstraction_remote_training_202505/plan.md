@@ -127,7 +127,7 @@ Focus: Deconstruct the monolithic synthesis problem into the 3-Tier Model Pipeli
   - **Automated Test Definition:** `pytest -v tests/models/test_fpo.py`
   - **Pass-to-Complete Gate:** Gradient descent converges in $\le 30$ steps for known geometries/audio signals.
 
-- [ ] Task 3.4: Complexity-Ordered Curriculum Benchmark (Audio vs SDF)
+- [x] Task 3.4: Complexity-Ordered Curriculum Benchmark (Audio vs SDF)
   - **Objective:** Run the full 3-Tier pipeline on Curriculum Levels 1 through 3 for both Audio and SDF simultaneously to benchmark which domain exhibits higher learning difficulty.
   - **Automated Test Definition:** `pytest -v tests/benchmarks/test_curriculum_benchmark.py`
   - **Pass-to-Complete Gate:** Benchmark script runs end-to-end and outputs comparative learning curves (loss vs curriculum depth).
