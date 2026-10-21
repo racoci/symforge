@@ -437,6 +437,8 @@ class TestPassToCompleteGate:
         # Warm up
         LoRAAdapterLoader.hot_swap(model, art_beta, registry=registry)
         LoRAAdapterLoader.hot_swap(model, art_alpha, registry=registry)
+        with torch.no_grad():
+            _ = model(x)
 
         # Force garbage collection baseline
         gc.collect()
