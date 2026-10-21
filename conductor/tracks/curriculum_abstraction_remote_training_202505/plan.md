@@ -77,7 +77,7 @@ Focus: Lean 4 package initialization, inductive type grammars (`FreeParam`, `Aud
 
 ---
 
-## Phase 2: Paired Domain Primitives, AST Extraction & Filtered Data Pipelines (Audio 1D + SDF 3D)
+## Phase 2: Paired Domain Primitives, AST Extraction & Filtered Data Pipelines (Audio 1D + SDF 3D) [checkpoint: c255f7e]
 
 Focus: Implement procedural primitives, differentiable perceptual loss evaluators, Tree-sitter AST normalizers for real-world code (OpenSCAD, Dexed/Faust), and procedural PCFG generators with triple quality filtering (Physical, Perceptual Entropy, Semantic Deduplication) to mitigate the synthetic prior trap.
 
@@ -103,7 +103,7 @@ Focus: Implement procedural primitives, differentiable perceptual loss evaluator
   - **Documentation Artifact:** `docs/architecture/data_normalizer_and_harvester.md`
   - **Pass-to-Complete Gate:** Parses sample OpenSCAD and Dexed JSON patches into valid Lean 4 ASTs; extracts valid production decision tuples.
 
-- [ ] Task 2.5: Phase 2 Verification & Baseline PCFG vs. PHOG Comparison (Refer to workflow.md)
+- [x] Task 2.5: Phase 2 Verification & Baseline PCFG vs. PHOG Comparison (Refer to workflow.md) [c255f7e]
 
 ---
 
