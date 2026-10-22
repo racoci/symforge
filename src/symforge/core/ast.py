@@ -938,5 +938,12 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
         return SDFHoleNode(hole_id=str(fields["id"]))
     if tag == "hole":
         return HoleNode(hole_id=str(fields["id"]))
+    if tag == "variable":
+        from symforge.abstraction.anti_unification import make_variable
+        return make_variable(
+            name=str(fields["name"]),
+            expected_type=str(fields.get("expectedType", "ASTNode")),
+            domain=str(fields.get("domain", "generic")),
+        )
 
     raise ValueError(f"Unknown node constructor tag: {tag}")

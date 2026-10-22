@@ -180,7 +180,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
 
 Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression evaluation, dynamic Lean 4 grammar expansion, and competency frontier tracking.
 
-- [ ] Task 5.1: Subgraph Anti-Unification & Structural Pattern Extractor
+- [x] Task 5.1: Subgraph Anti-Unification & Structural Pattern Extractor [c700004]
   - **Objective:** Implement anti-unification on pairs of AST/DAG programs to identify the Least General Generalization (LGG) and extract shared subtrees with parameterized holes.
   - **Bottleneck Mitigation:** Operates over discovered solution programs ($M \approx 20..50$) rather than entire search spaces, keeping CPU overhead under 2 seconds.
   - **Automated Test Definition:** `pytest -v tests/abstraction/test_anti_unification.py`
