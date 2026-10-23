@@ -157,8 +157,9 @@ class CustomLossScorer:
 class TypedGrammarExpander:
     """Generates type-safe production rule expansions for placeholder holes."""
 
-    def __init__(self):
+    def __init__(self, library: Optional[Any] = None):
         self.hole_counter = 0
+        self.library = library
 
     def _next_hole_id(self, prefix: str = "h") -> str:
         self.hole_counter += 1
@@ -167,9 +168,15 @@ class TypedGrammarExpander:
     def get_expansions(self, hole: HoleNode) -> List[ASTNode]:
         """Generate all single-step type-compatible replacements for a hole."""
         if isinstance(hole, AudioHoleNode):
-            return self._audio_expansions()
+            expansions = self._audio_expansions()
+            if self.library is not None:
+                expansions.extend(self.library.get_macro_expansions("audio", self._next_hole_id))
+            return expansions
         elif isinstance(hole, SDFHoleNode):
-            return self._sdf_expansions()
+            expansions = self._sdf_expansions()
+            if self.library is not None:
+                expansions.extend(self.library.get_macro_expansions("sdf", self._next_hole_id))
+            return expansions
         else:
             raise TypeError(f"Unknown or untyped hole: {type(hole).__name__}")
 
@@ -263,9 +270,16 @@ class TypeGuidedBeamSynthesizer:
         self,
         cost_model: Optional[HardwareCostModel] = None,
         expander: Optional[TypedGrammarExpander] = None,
+        library: Optional[Any] = None,
     ):
         self.cost_model = cost_model or HardwareCostModel()
-        self.expander = expander or TypedGrammarExpander()
+        if expander is not None:
+            self.expander = expander
+            if library is not None and getattr(self.expander, "library", None) is None:
+                self.expander.library = library
+        else:
+            self.expander = TypedGrammarExpander(library=library)
+        self.library = library or getattr(self.expander, "library", None)
 
     def synthesize(
         self,
@@ -403,9 +417,16 @@ class AStarSynthesizer:
         self,
         cost_model: Optional[HardwareCostModel] = None,
         expander: Optional[TypedGrammarExpander] = None,
+        library: Optional[Any] = None,
     ):
         self.cost_model = cost_model or HardwareCostModel()
-        self.expander = expander or TypedGrammarExpander()
+        if expander is not None:
+            self.expander = expander
+            if library is not None and getattr(self.expander, "library", None) is None:
+                self.expander.library = library
+        else:
+            self.expander = TypedGrammarExpander(library=library)
+        self.library = library or getattr(self.expander, "library", None)
 
     def synthesize(
         self,
@@ -522,3 +543,8 @@ class AStarSynthesizer:
             all_candidates_explored=all_candidates_explored,
             elapsed_seconds=time.time() - start_time,
         )
+
+
+# Alias for synthesizer search protocol
+TypedSynthesizer = TypeGuidedBeamSynthesizer
+

@@ -136,6 +136,11 @@ class DifferentiableAudioModule(DifferentiableProgram):
             amt = self.get_param(node.amount)
             return amt * torch.sin(2.0 * math.pi * f * t)
 
+        if hasattr(node, "macro_name") and hasattr(node, "arguments"):
+            from symforge.abstraction.grammar_expander import expand_macro_call
+            inlined = expand_macro_call(node)
+            return self._eval(inlined, t)
+
         raise TypeError(f"Unsupported audio node type: {type(node)}")
 
     def _adsr_envelope(
@@ -256,6 +261,11 @@ class DifferentiableSDFModule(DifferentiableProgram):
             d2 = self._eval(node.b, p)
             return torch.maximum(d1, -d2)
 
+        if hasattr(node, "macro_name") and hasattr(node, "arguments"):
+            from symforge.abstraction.grammar_expander import expand_macro_call
+            inlined = expand_macro_call(node)
+            return self._eval(inlined, p)
+
         raise TypeError(f"Unsupported SDF node type: {type(node)}")
 
     def _smooth_min(
@@ -295,10 +305,33 @@ class DifferentiableSDFModule(DifferentiableProgram):
         return torch.matmul(rz_mat, torch.matmul(ry_mat, rx_mat))
 
 
-def transpile_ast_to_module(node: ASTNode) -> DifferentiableProgram:
+def transpile_ast_to_module(
+    node: ASTNode,
+    library: Optional[Any] = None,
+) -> DifferentiableProgram:
     """Factory compiling an AST node to its corresponding differentiable module."""
-    if isinstance(node, AudioNode):
-        return DifferentiableAudioModule(node)
-    if isinstance(node, SDFNode):
-        return DifferentiableSDFModule(node)
+    from symforge.abstraction.grammar_expander import expand_all_macros_in_ast
+
+    expanded = expand_all_macros_in_ast(node, library=library)
+
+    if isinstance(expanded, AudioNode):
+        mod = DifferentiableAudioModule(expanded)
+        mod.original_root = node
+        return mod
+    if isinstance(expanded, SDFNode):
+        mod = DifferentiableSDFModule(expanded)
+        mod.original_root = node
+        return mod
+
+    # Domain fallback based on original or expanded node metadata
+    domain = getattr(node, "domain", getattr(expanded, "domain", None))
+    if domain == "audio":
+        mod = DifferentiableAudioModule(expanded)
+        mod.original_root = node
+        return mod
+    if domain == "sdf":
+        mod = DifferentiableSDFModule(expanded)
+        mod.original_root = node
+        return mod
+
     raise TypeError(f"Cannot transpile AST of type: {type(node)}")

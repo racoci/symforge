@@ -9,6 +9,7 @@ from symforge.search.synthesizer import (
     CustomLossScorer,
     TypedGrammarExpander,
     TypeGuidedBeamSynthesizer,
+    TypedSynthesizer,
     AStarSynthesizer,
 )
 
@@ -21,5 +22,6 @@ __all__ = [
     "CustomLossScorer",
     "TypedGrammarExpander",
     "TypeGuidedBeamSynthesizer",
+    "TypedSynthesizer",
     "AStarSynthesizer",
 ]

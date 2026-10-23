@@ -196,7 +196,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
   - **Documentation Artifact:** `docs/architecture/mdl_compression.md`
   - **Pass-to-Complete Gate:** Evaluates 20 candidates, accepting only the top compressing abstractions.
 
-- [ ] Task 5.3: Dynamic Lean 4 Grammar Expander & Library Injection
+- [x] Task 5.3: Dynamic Lean 4 Grammar Expander & Library Injection
   - **Objective:** Invert candidate abstractions into first-class DSL productions $\mathcal{R}$, register typed signatures, and dynamically update the Lean 4 inductive environment and PCFG prior distribution.
   - **Bottleneck Mitigation:** Grammar updates are append-only with versioned rollback capability; new productions inherit strict Lean 4 type rules.
   - **Automated Test Definition:** `pytest -v tests/abstraction/test_grammar_expander.py`

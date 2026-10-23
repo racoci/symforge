@@ -650,6 +650,21 @@ def substitute_hole(node: ASTNode, hole_id: str, replacement: ASTNode) -> ASTNod
             b=substitute_hole(node.b, hole_id, replacement),  # type: ignore
         )
 
+    # MacroCallNode support
+    if hasattr(node, "arguments") and hasattr(node, "macro_name"):
+        new_args = {}
+        for k, v in getattr(node, "arguments").items():
+            if isinstance(v, ASTNode):
+                new_args[k] = substitute_hole(v, hole_id, replacement)
+            else:
+                new_args[k] = v
+        from symforge.abstraction.mdl import make_macro_call
+        return make_macro_call(
+            macro_name=getattr(node, "macro_name"),
+            arguments=new_args,
+            domain=getattr(node, "domain", "generic"),
+        )
+
     return node
 
 
@@ -784,6 +799,23 @@ def update_ast_params(node: ASTNode, param_values: Dict[str, float]) -> ASTNode:
         return DifferenceNode(
             a=update_ast_params(node.a, param_values),  # type: ignore
             b=update_ast_params(node.b, param_values),  # type: ignore
+        )
+
+    # MacroCallNode support
+    if hasattr(node, "arguments") and hasattr(node, "macro_name"):
+        new_args = {}
+        for k, v in getattr(node, "arguments").items():
+            if isinstance(v, FreeParam):
+                new_args[k] = _update_param(v, param_values)
+            elif isinstance(v, ASTNode):
+                new_args[k] = update_ast_params(v, param_values)
+            else:
+                new_args[k] = v
+        from symforge.abstraction.mdl import make_macro_call
+        return make_macro_call(
+            macro_name=getattr(node, "macro_name"),
+            arguments=new_args,
+            domain=getattr(node, "domain", "generic"),
         )
 
     return node
