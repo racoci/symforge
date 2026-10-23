@@ -15,6 +15,7 @@ from symforge.core.ast import (
     ASTNode,
     AudioNode,
     FreeParam,
+    HardwareNode,
     SDFNode,
 )
 
@@ -69,6 +70,14 @@ class SDFVariableNode(SDFNode, VariableNode):
     pass
 
 
+@dataclass(frozen=True)
+class HardwareVariableNode(HardwareNode, VariableNode):
+    """Typed variable node in the hardware domain."""
+
+    def evaluate(self, registers: List[int]) -> int:
+        raise RuntimeError(f"Cannot evaluate unbound variable node: {self.name}")
+
+
 def make_variable(
     name: str,
     expected_type: str = "ASTNode",
@@ -79,6 +88,8 @@ def make_variable(
         return AudioVariableNode(name=name, expected_type=expected_type, domain="audio")
     if domain == "sdf" or expected_type == "SDFNode":
         return SDFVariableNode(name=name, expected_type=expected_type, domain="sdf")
+    if domain == "hardware" or expected_type == "HardwareNode":
+        return HardwareVariableNode(name=name, expected_type=expected_type, domain="hardware")
     return VariableNode(name=name, expected_type=expected_type, domain=domain)
 
 
@@ -145,6 +156,8 @@ def _infer_domain_and_type(u1: Any, u2: Any) -> Tuple[str, str]:
         return "audio", "AudioNode"
     if isinstance(u1, SDFNode) and isinstance(u2, SDFNode):
         return "sdf", "SDFNode"
+    if isinstance(u1, HardwareNode) and isinstance(u2, HardwareNode):
+        return "hardware", "HardwareNode"
     if isinstance(u1, FreeParam) or isinstance(u2, FreeParam):
         return "param", "FreeParam"
     if isinstance(u1, (int, float)) and isinstance(u2, (int, float)):
@@ -330,6 +343,8 @@ def _match_rec(
             return False
         if pat.domain == "sdf" and not isinstance(tgt, SDFNode):
             return False
+        if pat.domain == "hardware" and not isinstance(tgt, HardwareNode):
+            return False
         if pat.domain == "param" and not isinstance(tgt, (FreeParam, float, int)):
             return False
 
@@ -359,6 +374,8 @@ def _generate_pattern_name(ast: ASTNode, index: int) -> str:
         domain = "audio"
     elif isinstance(ast, SDFNode):
         domain = "sdf"
+    elif isinstance(ast, HardwareNode):
+        domain = "hardware"
 
     op_name = type(ast).__name__.replace("Node", "").lower()
     return f"macro_{domain}_{op_name}_{index}"
@@ -414,7 +431,8 @@ def mine_recurrent_patterns(
                 for s2 in prog_subtrees[j]:
                     # Domain optimization: skip cross-domain pairings
                     if (isinstance(s1, AudioNode) and not isinstance(s2, AudioNode)) or \
-                       (isinstance(s1, SDFNode) and not isinstance(s2, SDFNode)):
+                       (isinstance(s1, SDFNode) and not isinstance(s2, SDFNode)) or \
+                       (isinstance(s1, HardwareNode) and not isinstance(s2, HardwareNode)):
                         continue
 
                     lgg, _, _ = anti_unify(s1, s2)

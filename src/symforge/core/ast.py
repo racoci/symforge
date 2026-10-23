@@ -1,8 +1,11 @@
 """Typed Abstract Syntax Tree (AST) representations mirroring Lean 4 inductive definitions."""
 
 from __future__ import annotations
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Type
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -519,6 +522,211 @@ class DifferenceNode(SDFNode):
 
 
 # ==========================================
+# Hardware Domain Nodes (x86 / Superoptimization)
+# ==========================================
+
+
+@dataclass(frozen=True)
+class HardwareNode(ASTNode):
+    """Base class for all hardware instruction AST nodes in SymForge."""
+
+    def evaluate(self, registers: List[int]) -> int:
+        """Evaluate the hardware node over input integer/bitvector registers."""
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class ImmHardwareNode(HardwareNode):
+    """32-bit immediate constant."""
+
+    val: int
+
+    def evaluate(self, registers: List[int]) -> int:
+        return int(self.val) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {"immHardware": {"val": int(self.val)}}
+
+
+@dataclass(frozen=True)
+class RegHardwareNode(HardwareNode):
+    """Hardware register reference by zero-based index."""
+
+    reg_idx: int
+
+    def evaluate(self, registers: List[int]) -> int:
+        if 0 <= self.reg_idx < len(registers):
+            return int(registers[self.reg_idx]) & 0xFFFFFFFF
+        return 0
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {"regHardware": {"regIdx": int(self.reg_idx)}}
+
+
+@dataclass(frozen=True)
+class AddHardwareNode(HardwareNode):
+    """Integer addition with 32-bit wrap-around."""
+
+    left: HardwareNode
+    right: HardwareNode
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left, self.right)
+
+    def evaluate(self, registers: List[int]) -> int:
+        return (self.left.evaluate(registers) + self.right.evaluate(registers)) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "addHardware": {
+                "left": self.left.to_lean_dict(),
+                "right": self.right.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class MulHardwareNode(HardwareNode):
+    """Integer multiplication with 32-bit wrap-around."""
+
+    left: HardwareNode
+    right: HardwareNode
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left, self.right)
+
+    def evaluate(self, registers: List[int]) -> int:
+        return (self.left.evaluate(registers) * self.right.evaluate(registers)) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "mulHardware": {
+                "left": self.left.to_lean_dict(),
+                "right": self.right.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class AndHardwareNode(HardwareNode):
+    """Bitwise AND operation."""
+
+    left: HardwareNode
+    right: HardwareNode
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left, self.right)
+
+    def evaluate(self, registers: List[int]) -> int:
+        return (self.left.evaluate(registers) & self.right.evaluate(registers)) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "andHardware": {
+                "left": self.left.to_lean_dict(),
+                "right": self.right.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class OrHardwareNode(HardwareNode):
+    """Bitwise OR operation."""
+
+    left: HardwareNode
+    right: HardwareNode
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left, self.right)
+
+    def evaluate(self, registers: List[int]) -> int:
+        return (self.left.evaluate(registers) | self.right.evaluate(registers)) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "orHardware": {
+                "left": self.left.to_lean_dict(),
+                "right": self.right.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class XorHardwareNode(HardwareNode):
+    """Bitwise XOR operation."""
+
+    left: HardwareNode
+    right: HardwareNode
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left, self.right)
+
+    def evaluate(self, registers: List[int]) -> int:
+        return (self.left.evaluate(registers) ^ self.right.evaluate(registers)) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "xorHardware": {
+                "left": self.left.to_lean_dict(),
+                "right": self.right.to_lean_dict(),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class ShlHardwareNode(HardwareNode):
+    """Logical shift left."""
+
+    left: HardwareNode
+    shift: int
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left,)
+
+    def evaluate(self, registers: List[int]) -> int:
+        sh = int(self.shift) % 32
+        return (self.left.evaluate(registers) << sh) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "shlHardware": {
+                "left": self.left.to_lean_dict(),
+                "shift": int(self.shift),
+            }
+        }
+
+
+@dataclass(frozen=True)
+class ShrHardwareNode(HardwareNode):
+    """Logical shift right."""
+
+    left: HardwareNode
+    shift: int
+
+    @property
+    def children(self) -> Tuple[ASTNode, ...]:
+        return (self.left,)
+
+    def evaluate(self, registers: List[int]) -> int:
+        sh = int(self.shift) % 32
+        return ((self.left.evaluate(registers) & 0xFFFFFFFF) >> sh) & 0xFFFFFFFF
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {
+            "shrHardware": {
+                "left": self.left.to_lean_dict(),
+                "shift": int(self.shift),
+            }
+        }
+
+
+# ==========================================
 # Placeholder Holes & Partial Programs
 # ==========================================
 
@@ -551,6 +759,26 @@ class SDFHoleNode(SDFNode, HoleNode):
 
     def to_lean_dict(self) -> Dict[str, Any]:
         return {"sdfHole": {"id": self.hole_id}}
+
+
+@dataclass(frozen=True)
+class HardwareHoleNode(HardwareNode, HoleNode):
+    """Typed hole representing an unexpanded HardwareNode."""
+
+    hole_id: str = "h_0"
+    name: str = field(default="")
+
+    def __post_init__(self):
+        if not self.name and self.hole_id:
+            object.__setattr__(self, "name", self.hole_id)
+        elif self.name and (not self.hole_id or self.hole_id == "h_0"):
+            object.__setattr__(self, "hole_id", self.name)
+
+    def evaluate(self, registers: List[int]) -> int:
+        raise RuntimeError(f"Cannot evaluate unresolved HardwareHoleNode: {self.name or self.hole_id}")
+
+    def to_lean_dict(self) -> Dict[str, Any]:
+        return {"hardwareHole": {"name": self.name or self.hole_id, "id": self.hole_id or self.name}}
 
 
 def find_holes(node: ASTNode) -> List[HoleNode]:
@@ -648,6 +876,43 @@ def substitute_hole(node: ASTNode, hole_id: str, replacement: ASTNode) -> ASTNod
         return DifferenceNode(
             a=substitute_hole(node.a, hole_id, replacement),  # type: ignore
             b=substitute_hole(node.b, hole_id, replacement),  # type: ignore
+        )
+
+    # Hardware composite nodes
+    if isinstance(node, AddHardwareNode):
+        return AddHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            right=substitute_hole(node.right, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, MulHardwareNode):
+        return MulHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            right=substitute_hole(node.right, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, AndHardwareNode):
+        return AndHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            right=substitute_hole(node.right, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, OrHardwareNode):
+        return OrHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            right=substitute_hole(node.right, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, XorHardwareNode):
+        return XorHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            right=substitute_hole(node.right, hole_id, replacement),  # type: ignore
+        )
+    if isinstance(node, ShlHardwareNode):
+        return ShlHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            shift=node.shift,
+        )
+    if isinstance(node, ShrHardwareNode):
+        return ShrHardwareNode(
+            left=substitute_hole(node.left, hole_id, replacement),  # type: ignore
+            shift=node.shift,
         )
 
     # MacroCallNode support
@@ -799,6 +1064,43 @@ def update_ast_params(node: ASTNode, param_values: Dict[str, float]) -> ASTNode:
         return DifferenceNode(
             a=update_ast_params(node.a, param_values),  # type: ignore
             b=update_ast_params(node.b, param_values),  # type: ignore
+        )
+
+    # Hardware composite nodes
+    if isinstance(node, AddHardwareNode):
+        return AddHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            right=update_ast_params(node.right, param_values),  # type: ignore
+        )
+    if isinstance(node, MulHardwareNode):
+        return MulHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            right=update_ast_params(node.right, param_values),  # type: ignore
+        )
+    if isinstance(node, AndHardwareNode):
+        return AndHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            right=update_ast_params(node.right, param_values),  # type: ignore
+        )
+    if isinstance(node, OrHardwareNode):
+        return OrHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            right=update_ast_params(node.right, param_values),  # type: ignore
+        )
+    if isinstance(node, XorHardwareNode):
+        return XorHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            right=update_ast_params(node.right, param_values),  # type: ignore
+        )
+    if isinstance(node, ShlHardwareNode):
+        return ShlHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            shift=node.shift,
+        )
+    if isinstance(node, ShrHardwareNode):
+        return ShrHardwareNode(
+            left=update_ast_params(node.left, param_values),  # type: ignore
+            shift=node.shift,
         )
 
     # MacroCallNode support
@@ -963,7 +1265,63 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
             b=deserialize_node(fields["b"]),  # type: ignore
         )
 
+    # Hardware nodes
+    if tag in ("addHardware", "add"):
+        return AddHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            right=deserialize_node(fields["right"]),  # type: ignore
+        )
+    if tag in ("mulHardware", "mul"):
+        return MulHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            right=deserialize_node(fields["right"]),  # type: ignore
+        )
+    if tag in ("andHardware", "and"):
+        return AndHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            right=deserialize_node(fields["right"]),  # type: ignore
+        )
+    if tag in ("orHardware", "or"):
+        return OrHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            right=deserialize_node(fields["right"]),  # type: ignore
+        )
+    if tag in ("xorHardware", "xor"):
+        return XorHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            right=deserialize_node(fields["right"]),  # type: ignore
+        )
+    if tag in ("shlHardware", "shl"):
+        return ShlHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            shift=int(fields["shift"]),
+        )
+    if tag in ("shrHardware", "shr"):
+        return ShrHardwareNode(
+            left=deserialize_node(fields["left"]),  # type: ignore
+            shift=int(fields["shift"]),
+        )
+    if tag in ("immHardware", "imm"):
+        return ImmHardwareNode(val=int(fields["val"]))
+    if tag in ("regHardware", "reg"):
+        reg_val = fields.get("regIdx", fields.get("reg_idx", fields.get("name", 0)))
+        if isinstance(reg_val, str) and reg_val.startswith("r"):
+            try:
+                reg_val = int(reg_val[1:])
+            except ValueError as exc:
+                logger.warning(
+                    "Failed to parse register integer from string %r (fields=%r): %s",
+                    reg_val,
+                    fields,
+                    exc,
+                )
+                reg_val = 0
+        return RegHardwareNode(reg_idx=int(reg_val))
+
     # Hole nodes
+    if tag in ("hardwareHole", "hwHole"):
+        h_id = str(fields.get("id", fields.get("name", "h_0")))
+        return HardwareHoleNode(name=h_id, hole_id=h_id)
     if tag == "audioHole":
         return AudioHoleNode(hole_id=str(fields["id"]))
     if tag == "sdfHole":

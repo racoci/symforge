@@ -34,6 +34,16 @@ from symforge.core.ast import (
     IntersectionNode,
     DifferenceNode,
     FreeParam,
+    HardwareNode,
+    ImmHardwareNode,
+    RegHardwareNode,
+    AddHardwareNode,
+    MulHardwareNode,
+    AndHardwareNode,
+    OrHardwareNode,
+    XorHardwareNode,
+    ShlHardwareNode,
+    ShrHardwareNode,
 )
 
 
@@ -305,6 +315,49 @@ class DifferentiableSDFModule(DifferentiableProgram):
         return torch.matmul(rz_mat, torch.matmul(ry_mat, rx_mat))
 
 
+class DifferentiableHardwareModule(DifferentiableProgram):
+    """Compiles a HardwareNode AST into an executable module."""
+
+    def forward(self, registers: torch.Tensor) -> torch.Tensor:
+        """Compute hardware program evaluation over register tensor of shape (..., num_regs)."""
+        return self._eval(self.root, registers)
+
+    def _eval(self, node: ASTNode, registers: torch.Tensor) -> torch.Tensor:
+        if isinstance(node, RegHardwareNode):
+            idx = node.reg_idx
+            if idx < registers.shape[-1]:
+                return registers[..., idx]
+            return torch.zeros_like(registers[..., 0])
+
+        if isinstance(node, ImmHardwareNode):
+            return torch.full(registers.shape[:-1], node.val, dtype=registers.dtype, device=registers.device)
+
+        if isinstance(node, AddHardwareNode):
+            return (self._eval(node.left, registers) + self._eval(node.right, registers)) & 0xFFFFFFFF
+
+        if isinstance(node, MulHardwareNode):
+            return (self._eval(node.left, registers) * self._eval(node.right, registers)) & 0xFFFFFFFF
+
+        if isinstance(node, AndHardwareNode):
+            return (self._eval(node.left, registers) & self._eval(node.right, registers)) & 0xFFFFFFFF
+
+        if isinstance(node, OrHardwareNode):
+            return (self._eval(node.left, registers) | self._eval(node.right, registers)) & 0xFFFFFFFF
+
+        if isinstance(node, XorHardwareNode):
+            return (self._eval(node.left, registers) ^ self._eval(node.right, registers)) & 0xFFFFFFFF
+
+        if isinstance(node, ShlHardwareNode):
+            sh = int(node.shift) % 32
+            return (self._eval(node.left, registers) << sh) & 0xFFFFFFFF
+
+        if isinstance(node, ShrHardwareNode):
+            sh = int(node.shift) % 32
+            return (self._eval(node.left, registers) >> sh) & 0xFFFFFFFF
+
+        raise TypeError(f"Unknown hardware node type in transpiler: {type(node)}")
+
+
 def transpile_ast_to_module(
     node: ASTNode,
     library: Optional[Any] = None,
@@ -322,6 +375,10 @@ def transpile_ast_to_module(
         mod = DifferentiableSDFModule(expanded)
         mod.original_root = node
         return mod
+    if isinstance(expanded, HardwareNode):
+        mod = DifferentiableHardwareModule(expanded)
+        mod.original_root = node
+        return mod
 
     # Domain fallback based on original or expanded node metadata
     domain = getattr(node, "domain", getattr(expanded, "domain", None))
@@ -331,6 +388,10 @@ def transpile_ast_to_module(
         return mod
     if domain == "sdf":
         mod = DifferentiableSDFModule(expanded)
+        mod.original_root = node
+        return mod
+    if domain == "hardware":
+        mod = DifferentiableHardwareModule(expanded)
         mod.original_root = node
         return mod
 

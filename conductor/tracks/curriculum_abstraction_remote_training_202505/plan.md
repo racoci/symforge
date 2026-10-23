@@ -236,7 +236,7 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/cost_watchdog.md`
   - **Pass-to-Complete Gate:** Budget exhaustion test verifies zero unauthorized external API calls are made.
 
-- [ ] Task 6.3: Cross-Domain Unified Validation & Transfer Benchmark (Audio, SDF, Hardware)
+- [x] Task 6.3: Cross-Domain Unified Validation & Transfer Benchmark (Audio, SDF, Hardware)
   - **Objective:** Validate that the exact same synthesis and abstraction discovery engine operates successfully across Audio DSP, SDF 3D Geometry, and Hardware Instruction Superoptimization (BHive benchmark) without domain-specific algorithmic hacks.
   - **Bottleneck Mitigation:** Paired benchmark execution under identical resource budgets.
   - **Automated Test Definition:** `pytest -v tests/benchmarks/test_cross_domain_transfer.py`

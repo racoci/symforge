@@ -21,6 +21,7 @@ from symforge.abstraction.anti_unification import (
 )
 from symforge.abstraction.mdl import (
     AudioMacroCallNode,
+    HardwareMacroCallNode,
     MacroCallNode,
     SDFMacroCallNode,
     make_macro_call,
@@ -37,6 +38,8 @@ from symforge.core.ast import (
     FMNode,
     FreeParam,
     GainNode,
+    HardwareHoleNode,
+    HardwareNode,
     HoleNode,
     IntersectionNode,
     LFONode,
@@ -133,6 +136,9 @@ class MacroDefinition:
             elif param.expected_type == "SDFNode":
                 hole_id = hole_id_fn("sdf") if hole_id_fn else f"h_{self.name}_{counter}"
                 args[param.name] = SDFHoleNode(hole_id=hole_id)
+            elif param.expected_type == "HardwareNode":
+                hole_id = hole_id_fn("hardware") if hole_id_fn else f"h_{self.name}_{counter}"
+                args[param.name] = HardwareHoleNode(name=hole_id, hole_id=hole_id)
             elif param.is_free_param or param.expected_type == "FreeParam":
                 param_id = f"{self.name}_{param.name}_{counter}"
                 args[param.name] = FreeParam(
@@ -362,6 +368,9 @@ def pattern_to_macro_definition(
     elif isinstance(pattern.generalized_ast, SDFNode):
         domain = "sdf"
         return_type = "SDFNode"
+    elif isinstance(pattern.generalized_ast, HardwareNode):
+        domain = "hardware"
+        return_type = "HardwareNode"
     else:
         domain = "generic"
         return_type = "ASTNode"
@@ -557,14 +566,19 @@ class DynamicGrammarLibrary:
     def get_pcfg_rules(self, domain: str) -> List[GrammarRule]:
         """Return GrammarRules for PCFG generator."""
         rules: List[GrammarRule] = []
-        lhs = "AudioExp" if domain == "audio" else "SDFExp"
+        if domain == "audio":
+            lhs = "AudioExp"
+        elif domain == "sdf":
+            lhs = "SDFExp"
+        else:
+            lhs = "HardwareExp"
         weights = self.rule_weights.get(domain, {})
 
         for tag, w in weights.items():
             if tag in self.macros:
                 m = self.macros[tag]
                 children_symbols = tuple(
-                    lhs for p in m.parameters if p.expected_type in ("AudioNode", "SDFNode")
+                    lhs for p in m.parameters if p.expected_type in ("AudioNode", "SDFNode", "HardwareNode")
                 )
                 is_terminal = len(children_symbols) == 0
                 rules.append(
@@ -581,9 +595,9 @@ class DynamicGrammarLibrary:
                     GrammarRule(
                         lhs=lhs,
                         rhs_tag=tag,
-                        child_symbols=(lhs,) if tag in ("LowPass", "Gain", "Translate") else ((lhs, lhs) if tag in ("Mix", "Union", "Intersection", "Difference") else ()),
+                        child_symbols=(lhs,) if tag in ("LowPass", "Gain", "Translate", "Shl", "Shr") else ((lhs, lhs) if tag in ("Mix", "Union", "Intersection", "Difference", "Add", "Mul", "And", "Or", "Xor") else ()),
                         weight=w,
-                        is_terminal=tag in ("Sine", "Saw", "Square", "Noise", "FM", "Sphere", "Box", "Cylinder", "Torus"),
+                        is_terminal=tag in ("Sine", "Saw", "Square", "Noise", "FM", "Sphere", "Box", "Cylinder", "Torus", "Imm", "Reg"),
                     )
                 )
         return rules

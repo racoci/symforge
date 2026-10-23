@@ -35,6 +35,17 @@ from symforge.core.ast import (
     IntersectionNode,
     DifferenceNode,
     FreeParam,
+    HardwareNode,
+    ImmHardwareNode,
+    RegHardwareNode,
+    AddHardwareNode,
+    MulHardwareNode,
+    AndHardwareNode,
+    OrHardwareNode,
+    XorHardwareNode,
+    ShlHardwareNode,
+    ShrHardwareNode,
+    HardwareHoleNode,
     find_holes,
     has_holes,
     substitute_hole,
@@ -57,6 +68,11 @@ class SearchConfig:
     optimize_parameters: bool = False
     param_opt_steps: int = 15
     param_opt_lr: float = 0.05
+    max_steps: Optional[int] = None
+
+    def __post_init__(self):
+        if self.max_steps is not None:
+            self.max_expansions = self.max_steps
 
 
 @dataclass
@@ -107,19 +123,42 @@ class ReferenceASTScorer:
         target: ASTNode,
         domain: str = "audio",
         sample_count: int = 100,
+        test_vectors: Optional[List[List[int]]] = None,
+        library: Optional[Any] = None,
     ):
         self.target = target
+        self.library = library
+        if domain == "audio" and isinstance(target, HardwareNode):
+            domain = "hardware"
+        elif domain == "audio" and isinstance(target, SDFNode):
+            domain = "sdf"
         self.domain = domain
-        self.target_module = transpile_ast_to_module(target)
+        self.target_module = transpile_ast_to_module(target, library=library)
 
-        if domain == "audio":
+        if self.domain == "audio":
             self.eval_inputs = torch.linspace(0.0, 0.02, sample_count)
+            with torch.no_grad():
+                self.target_output = self.target_module(self.eval_inputs)
+        elif self.domain == "hardware":
+            if test_vectors is None:
+                self.hw_test_vectors = [
+                    [1, 0, 0],
+                    [2, 3, 0],
+                    [5, 10, 2],
+                    [7, 7, 7],
+                    [0, 1, 4],
+                    [10, 20, 30],
+                ]
+            else:
+                self.hw_test_vectors = test_vectors
+            self.eval_inputs = torch.tensor(self.hw_test_vectors, dtype=torch.int64)
+            with torch.no_grad():
+                self.target_output = self.target_module(self.eval_inputs)
         else:
             torch.manual_seed(42)
             self.eval_inputs = torch.randn(sample_count, 3)
-
-        with torch.no_grad():
-            self.target_output = self.target_module(self.eval_inputs)
+            with torch.no_grad():
+                self.target_output = self.target_module(self.eval_inputs)
 
     def score(self, program: ASTNode) -> float:
         if has_holes(program):
@@ -128,11 +167,18 @@ class ReferenceASTScorer:
             return 1.0 + 0.5 * len(holes)
 
         try:
-            cand_module = transpile_ast_to_module(program)
+            cand_module = transpile_ast_to_module(program, library=self.library)
             with torch.no_grad():
                 cand_output = cand_module(self.eval_inputs)
-                mse = torch.nn.functional.mse_loss(cand_output, self.target_output).item()
-                return float(mse)
+                if self.domain == "hardware":
+                    if torch.equal(cand_output, self.target_output):
+                        return 0.0
+                    diff = torch.abs(cand_output.float() - self.target_output.float())
+                    mae = torch.mean(diff).item()
+                    return 0.0 if mae == 0.0 else float(mae)
+                else:
+                    mse = torch.nn.functional.mse_loss(cand_output, self.target_output).item()
+                    return float(mse)
         except Exception as exc:
             logger.warning(
                 "Evaluation failed for candidate %s (size=%d, depth=%d) with exception: %s",
@@ -169,13 +215,18 @@ class TypedGrammarExpander:
         """Generate all single-step type-compatible replacements for a hole."""
         if isinstance(hole, AudioHoleNode):
             expansions = self._audio_expansions()
-            if self.library is not None:
+            if self.library is not None and hasattr(self.library, "get_macro_expansions"):
                 expansions.extend(self.library.get_macro_expansions("audio", self._next_hole_id))
             return expansions
         elif isinstance(hole, SDFHoleNode):
             expansions = self._sdf_expansions()
-            if self.library is not None:
+            if self.library is not None and hasattr(self.library, "get_macro_expansions"):
                 expansions.extend(self.library.get_macro_expansions("sdf", self._next_hole_id))
+            return expansions
+        elif isinstance(hole, HardwareHoleNode):
+            expansions = self._hardware_expansions()
+            if self.library is not None and hasattr(self.library, "get_macro_expansions"):
+                expansions.extend(self.library.get_macro_expansions("hardware", self._next_hole_id))
             return expansions
         else:
             raise TypeError(f"Unknown or untyped hole: {type(hole).__name__}")
@@ -262,6 +313,27 @@ class TypedGrammarExpander:
             ),
         ]
 
+    def _hardware_expansions(self) -> List[ASTNode]:
+        h1 = self._next_hole_id("hw")
+        h2 = self._next_hole_id("hw")
+        return [
+            # Terminal registers and immediates
+            RegHardwareNode(0),
+            RegHardwareNode(1),
+            RegHardwareNode(2),
+            ImmHardwareNode(0),
+            ImmHardwareNode(1),
+            ImmHardwareNode(2),
+            # Combinators
+            AddHardwareNode(HardwareHoleNode(h1), HardwareHoleNode(h2)),
+            MulHardwareNode(HardwareHoleNode(h1), HardwareHoleNode(h2)),
+            AndHardwareNode(HardwareHoleNode(h1), HardwareHoleNode(h2)),
+            OrHardwareNode(HardwareHoleNode(h1), HardwareHoleNode(h2)),
+            XorHardwareNode(HardwareHoleNode(h1), HardwareHoleNode(h2)),
+            ShlHardwareNode(HardwareHoleNode(h1), 1),
+            ShrHardwareNode(HardwareHoleNode(h1), 1),
+        ]
+
 
 class TypeGuidedBeamSynthesizer:
     """Type-guided beam search synthesizer with cost-budget pruning."""
@@ -271,6 +343,11 @@ class TypeGuidedBeamSynthesizer:
         cost_model: Optional[HardwareCostModel] = None,
         expander: Optional[TypedGrammarExpander] = None,
         library: Optional[Any] = None,
+        beam_width: int = 15,
+        max_steps: Optional[int] = None,
+        max_depth: int = 5,
+        cost_weight: float = 0.01,
+        tolerance: float = 1e-3,
     ):
         self.cost_model = cost_model or HardwareCostModel()
         if expander is not None:
@@ -280,6 +357,11 @@ class TypeGuidedBeamSynthesizer:
         else:
             self.expander = TypedGrammarExpander(library=library)
         self.library = library or getattr(self.expander, "library", None)
+        self.beam_width = beam_width
+        self.max_steps = max_steps
+        self.max_depth = max_depth
+        self.cost_weight = cost_weight
+        self.tolerance = tolerance
 
     def synthesize(
         self,
@@ -288,7 +370,18 @@ class TypeGuidedBeamSynthesizer:
         config: Optional[SearchConfig] = None,
     ) -> SynthesisResult:
         start_time = time.time()
-        cfg = config or SearchConfig()
+        if config is not None:
+            cfg = config
+            if cfg.max_steps is not None and (cfg.max_expansions == 200 or cfg.max_expansions is None):
+                cfg.max_expansions = cfg.max_steps
+        else:
+            cfg = SearchConfig(
+                beam_width=self.beam_width,
+                max_depth=self.max_depth,
+                max_expansions=self.max_steps if self.max_steps is not None else 200,
+                cost_weight=self.cost_weight,
+                tolerance=self.tolerance,
+            )
 
         initial_cost = self.cost_model.compute_cost(initial_hole)
         initial_score = scorer.score(initial_hole)

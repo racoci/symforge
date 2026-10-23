@@ -26,6 +26,17 @@ from symforge.core.ast import (
     IntersectionNode,
     DifferenceNode,
     FreeParam,
+    HardwareNode,
+    ImmHardwareNode,
+    RegHardwareNode,
+    AddHardwareNode,
+    MulHardwareNode,
+    AndHardwareNode,
+    OrHardwareNode,
+    XorHardwareNode,
+    ShlHardwareNode,
+    ShrHardwareNode,
+    HardwareHoleNode,
 )
 from symforge.core.dag import ast_to_dag, DAGNode
 
@@ -61,6 +72,17 @@ class HardwareCostModel:
         UnionNode: 5.0,
         IntersectionNode: 2.0,
         DifferenceNode: 2.5,
+        # Hardware domain
+        ImmHardwareNode: 0.5,
+        RegHardwareNode: 0.5,
+        AddHardwareNode: 1.0,
+        MulHardwareNode: 3.0,
+        AndHardwareNode: 1.0,
+        OrHardwareNode: 1.0,
+        XorHardwareNode: 1.0,
+        ShlHardwareNode: 1.0,
+        ShrHardwareNode: 1.0,
+        HardwareHoleNode: 1.0,
     }
 
     def __init__(

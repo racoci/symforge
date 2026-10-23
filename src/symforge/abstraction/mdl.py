@@ -21,6 +21,7 @@ from symforge.core.ast import (
     ASTNode,
     AudioNode,
     FreeParam,
+    HardwareNode,
     HoleNode,
     SDFNode,
 )
@@ -121,6 +122,14 @@ class SDFMacroCallNode(SDFNode, MacroCallNode):
     pass
 
 
+@dataclass(frozen=True)
+class HardwareMacroCallNode(HardwareNode, MacroCallNode):
+    """Typed macro call node residing within the hardware domain."""
+
+    def evaluate(self, registers: List[int]) -> int:
+        raise RuntimeError(f"Cannot directly evaluate unexpanded HardwareMacroCallNode: {self.macro_name}")
+
+
 def make_macro_call(
     macro_name: str,
     arguments: Dict[str, Any],
@@ -131,15 +140,19 @@ def make_macro_call(
         return AudioMacroCallNode(macro_name=macro_name, arguments=arguments, domain="audio")
     if domain == "sdf":
         return SDFMacroCallNode(macro_name=macro_name, arguments=arguments, domain="sdf")
+    if domain == "hardware":
+        return HardwareMacroCallNode(macro_name=macro_name, arguments=arguments, domain="hardware")
     return MacroCallNode(macro_name=macro_name, arguments=arguments, domain=domain)
 
 
 def _infer_pattern_domain(ast: ASTNode) -> str:
-    """Infers the domain ('audio', 'sdf', or 'generic') of a pattern AST."""
+    """Infers the domain ('audio', 'sdf', 'hardware', or 'generic') of a pattern AST."""
     if isinstance(ast, AudioNode):
         return "audio"
     if isinstance(ast, SDFNode):
         return "sdf"
+    if isinstance(ast, HardwareNode):
+        return "hardware"
     return "generic"
 
 
