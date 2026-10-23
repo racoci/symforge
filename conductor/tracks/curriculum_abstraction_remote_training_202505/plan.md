@@ -220,7 +220,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
 
 Focus: Central orchestration loop, financial cost watchdog, cross-domain validation (including hardware instruction superoptimization), library bloat pruning, and offline degradation resilience.
 
-- [ ] Task 6.1: Meta-Controller Regime Loop
+- [x] Task 6.1: Meta-Controller Regime Loop [6aa21e0]
   - **Objective:** Build the central orchestration loop managing the wake-sleep cycle: (1) Synthesize on curriculum tasks, (2) Harvest trajectories, (3) Discover abstractions (sleep-compression), (4) Dispatch asynchronous remote LoRA fine-tuning.
   - **Bottleneck Mitigation:** Asynchronous orchestration; double-buffered adapter swapping prevents local synthesis from blocking on remote training jobs.
   - **Automated Test Definition:** `pytest -v tests/orchestration/test_meta_controller.py`
