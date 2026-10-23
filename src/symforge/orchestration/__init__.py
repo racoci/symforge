@@ -1,5 +1,15 @@
-"""SymForge Orchestration Package: Meta-Controller and System Coordination."""
+"""SymForge Orchestration Package: Meta-Controller, Cost Watchdog, and System Coordination."""
 
+from symforge.orchestration.cost_watchdog import (
+    BudgetExceededError,
+    CostEstimate,
+    CostWatchdog,
+    CostWatchdogConfig,
+    CostWatchdogError,
+    DEFAULT_RATE_CARDS,
+    DispatchDecision,
+    FALLBACK_RATES,
+)
 from symforge.orchestration.meta_controller import (
     CycleTelemetry,
     MetaController,
@@ -8,6 +18,14 @@ from symforge.orchestration.meta_controller import (
 )
 
 __all__ = [
+    "BudgetExceededError",
+    "CostEstimate",
+    "CostWatchdog",
+    "CostWatchdogConfig",
+    "CostWatchdogError",
+    "DEFAULT_RATE_CARDS",
+    "DispatchDecision",
+    "FALLBACK_RATES",
     "CycleTelemetry",
     "MetaController",
     "MetaControllerConfig",

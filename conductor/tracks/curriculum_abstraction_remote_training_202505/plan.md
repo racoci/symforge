@@ -228,7 +228,7 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/meta_controller.md`
   - **Pass-to-Complete Gate:** 5 full wake-sleep iterations run with `MockComputeProvider` in < 2 seconds.
 
-- [ ] Task 6.2: Financial Pre-Flight Cost Watchdog & Safety Gate
+- [x] Task 6.2: Financial Pre-Flight Cost Watchdog & Safety Gate
   - **Objective:** Implement `CostWatchdog` calculating projected job costs, enforcing hard session spending caps ($2.00 max), and intercepting unauthorized cloud dispatches.
   - **Bottleneck Mitigation:** Local zero-cost arithmetic check prior to every remote API invocation.
   - **Automated Test Definition:** `pytest -v tests/orchestration/test_cost_watchdog.py`

@@ -38,6 +38,7 @@ from symforge.compute.protocol import ComputeProvider
 from symforge.core.ast import ASTNode
 from symforge.core.curriculum import CurriculumLevel
 from symforge.curriculum.frontier import ZPDSampler
+from symforge.orchestration.cost_watchdog import CostWatchdog
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +143,7 @@ class MetaController:
         ] = None,
         artifacts_dir: Optional[Path] = None,
         seed: Optional[int] = None,
+        cost_watchdog: Optional[CostWatchdog] = None,
     ) -> None:
         """Initialize MetaController components, replay buffer, and registries."""
         self._config = config or MetaControllerConfig(domain="audio")
@@ -157,6 +159,9 @@ class MetaController:
             Path(tempfile.gettempdir()) / "symforge_meta_artifacts"
         )
         self._artifacts_dir.mkdir(parents=True, exist_ok=True)
+        self._cost_watchdog = cost_watchdog
+        self._fallback_mock_provider = MockComputeProvider()
+        self._active_job_provider: Optional[ComputeProvider] = None
 
         self._replay_buffer: collections.deque[SolvedTrajectory] = (
             collections.deque(maxlen=self._config.max_replay_buffer_size)
@@ -215,6 +220,11 @@ class MetaController:
         """Return directory where downloaded adapter artifacts are stored."""
         return self._artifacts_dir
 
+    @property
+    def cost_watchdog(self) -> Optional[CostWatchdog]:
+        """Return the active CostWatchdog instance if configured."""
+        return self._cost_watchdog
+
     def _run_sync(self, coro: Any) -> Any:
         """Execute an asynchronous coroutine synchronously with a hard timeout."""
         try:
@@ -231,9 +241,10 @@ class MetaController:
 
     async def _hot_swap_completed_job_async(self, job_id: str) -> Optional[str]:
         """Download artifact, verify cryptographic checksum, and hot-swap adapter."""
+        target_provider = self._active_job_provider or self._compute_provider
         try:
             artifact = await asyncio.wait_for(
-                self._compute_provider.fetch_job_artifacts(
+                target_provider.fetch_job_artifacts(
                     job_id, self._artifacts_dir
                 ),
                 timeout=10.0,
@@ -253,6 +264,7 @@ class MetaController:
                 job_id,
             )
             self._active_job_id = None
+            self._active_job_provider = None
             return self._active_adapter_id
         except Exception as exc:
             logger.error(
@@ -261,6 +273,7 @@ class MetaController:
                 exc,
             )
             self._active_job_id = None
+            self._active_job_provider = None
             return None
 
     async def check_background_training_async(self) -> Optional[str]:
@@ -268,9 +281,10 @@ class MetaController:
         if self._active_job_id is None:
             return None
 
+        target_provider = self._active_job_provider or self._compute_provider
         try:
             status_resp = await asyncio.wait_for(
-                self._compute_provider.poll_job_status(self._active_job_id),
+                target_provider.poll_job_status(self._active_job_id),
                 timeout=10.0,
             )
         except Exception as exc:
@@ -282,6 +296,11 @@ class MetaController:
             return None
 
         if status_resp.status == JobStatus.COMPLETED:
+            if self._cost_watchdog is not None:
+                self._cost_watchdog.record_actual_cost(
+                    self._active_job_id,
+                    status_resp.estimated_cost_usd,
+                )
             return await asyncio.wait_for(
                 self._hot_swap_completed_job_async(self._active_job_id),
                 timeout=15.0,
@@ -294,7 +313,13 @@ class MetaController:
                 status_resp.status.value,
                 status_resp.error_message,
             )
+            if self._cost_watchdog is not None:
+                self._cost_watchdog.record_actual_cost(
+                    self._active_job_id,
+                    status_resp.estimated_cost_usd,
+                )
             self._active_job_id = None
+            self._active_job_provider = None
             return None
 
         return None
@@ -461,11 +486,28 @@ class MetaController:
         )
 
         try:
+            if self._cost_watchdog is not None:
+                job_id, was_mocked = await asyncio.wait_for(
+                    self._cost_watchdog.intercept_or_fallback(
+                        provider=self._compute_provider,
+                        payload=payload,
+                        config=job_cfg,
+                        mock_provider=self._fallback_mock_provider,
+                    ),
+                    timeout=15.0,
+                )
+                self._active_job_id = job_id
+                self._active_job_provider = (
+                    self._fallback_mock_provider if was_mocked else self._compute_provider
+                )
+                return job_id
+
             job_id = await asyncio.wait_for(
                 self._compute_provider.submit_training_job(payload, job_cfg),
                 timeout=10.0,
             )
             self._active_job_id = job_id
+            self._active_job_provider = self._compute_provider
             return job_id
         except Exception as exc:
             logger.error(
