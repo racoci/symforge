@@ -188,7 +188,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
   - **Documentation Artifact:** `docs/architecture/anti_unification.md`
   - **Pass-to-Complete Gate:** Correctly discovers candidate macro-primitives from pairs of geometric and audio programs.
 
-- [ ] Task 5.2: Minimum Description Length (MDL) Compression Evaluator
+- [x] Task 5.2: Minimum Description Length (MDL) Compression Evaluator [a1246a4]
   - **Objective:** Calculate compression utility $\Delta \text{MDL}(\alpha) = \text{Size}(\alpha) - \sum (\text{Size}(p) - \text{Size}(p[\alpha]))$ to filter candidate abstractions.
   - **Bottleneck Mitigation:** Fast discrete counting of AST node types and parameter bits; rejects unhelpful candidates immediately.
   - **Automated Test Definition:** `pytest -v tests/abstraction/test_mdl.py`

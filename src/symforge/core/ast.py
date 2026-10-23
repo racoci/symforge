@@ -945,5 +945,22 @@ def deserialize_node(data: Dict[str, Any]) -> ASTNode:
             expected_type=str(fields.get("expectedType", "ASTNode")),
             domain=str(fields.get("domain", "generic")),
         )
+    if tag == "macroCall":
+        from symforge.abstraction.mdl import make_macro_call
+        raw_args = fields.get("arguments", {})
+        parsed_args: Dict[str, Any] = {}
+        for k, v in raw_args.items():
+            if isinstance(v, dict):
+                if "minVal" in v:
+                    parsed_args[k] = FreeParam.from_dict(v)
+                else:
+                    parsed_args[k] = deserialize_node(v)
+            else:
+                parsed_args[k] = v
+        return make_macro_call(
+            macro_name=str(fields["name"]),
+            arguments=parsed_args,
+            domain=str(fields.get("domain", "generic")),
+        )
 
     raise ValueError(f"Unknown node constructor tag: {tag}")
