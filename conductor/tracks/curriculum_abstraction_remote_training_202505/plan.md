@@ -176,7 +176,7 @@ Focus: Abstracting heavy neural training, LoRA fine-tuning, and gradient updates
 
 ---
 
-## Phase 5: DreamCoder Abstraction Discovery Engine & Adaptive Curriculum
+## Phase 5: DreamCoder Abstraction Discovery Engine & Adaptive Curriculum [checkpoint: a676c3b]
 
 Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression evaluation, dynamic Lean 4 grammar expansion, and competency frontier tracking.
 
@@ -196,7 +196,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
   - **Documentation Artifact:** `docs/architecture/mdl_compression.md`
   - **Pass-to-Complete Gate:** Evaluates 20 candidates, accepting only the top compressing abstractions.
 
-- [x] Task 5.3: Dynamic Lean 4 Grammar Expander & Library Injection
+- [x] Task 5.3: Dynamic Lean 4 Grammar Expander & Library Injection [db61ce8]
   - **Objective:** Invert candidate abstractions into first-class DSL productions $\mathcal{R}$, register typed signatures, and dynamically update the Lean 4 inductive environment and PCFG prior distribution.
   - **Bottleneck Mitigation:** Grammar updates are append-only with versioned rollback capability; new productions inherit strict Lean 4 type rules.
   - **Automated Test Definition:** `pytest -v tests/abstraction/test_grammar_expander.py`
@@ -204,7 +204,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
   - **Documentation Artifact:** `docs/architecture/grammar_expander.md`
   - **Pass-to-Complete Gate:** Synthesizer successfully uses newly invented macro-primitive in a subsequent synthesis task, reducing search steps by $> 40\%$.
 
-- [x] Task 5.4: Competency Frontier Tracker & ZPD Sampler
+- [x] Task 5.4: Competency Frontier Tracker & ZPD Sampler [a676c3b]
   - **Objective:** Implement the Competency Frontier engine tracking moving-average success rate $S(c)$ and sampling tasks from the Zone of Proximal Development ($0.2 \le S(c) \le 0.8$) across both audio and SDF tasks.
   - **Bottleneck Mitigation:** Pure statistics and sampling logic; decoupled from synthesis execution.
   - **Automated Test Definition:** `pytest -v tests/curriculum/test_frontier.py`
@@ -212,7 +212,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
   - **Documentation Artifact:** `docs/architecture/competency_frontier.md`
   - **Pass-to-Complete Gate:** Monotonic frontier progression demonstrated on simulated student agents.
 
-- [ ] Task 5.5: Phase 5 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 5.5: Phase 5 Verification & Checkpoint (Refer to workflow.md) [a676c3b]
 
 ---
 
