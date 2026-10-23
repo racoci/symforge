@@ -559,6 +559,38 @@ class DynamicGrammarLibrary:
 
         return macro_def
 
+    def unregister_macro(self, macro_name: str) -> Optional[MacroDefinition]:
+        """Safely unregister a macro from the library and renormalize PCFG priors.
+
+        Args:
+            macro_name: Name of the macro to remove.
+
+        Returns:
+            The removed MacroDefinition, or None if the macro was not found.
+        """
+        clean_name = macro_name.replace("-", "_").lower()
+        if not clean_name.startswith("macro_") and f"macro_{clean_name}" in self.macros:
+            clean_name = f"macro_{clean_name}"
+
+        removed = self.macros.pop(clean_name, None)
+        if removed is None:
+            short_name = clean_name.replace("macro_", "")
+            removed = self.macros.pop(short_name, None)
+            if removed is not None:
+                clean_name = short_name
+
+        if removed is None:
+            return None
+
+        DynamicGrammarLibrary._GLOBAL_REGISTRY.pop(clean_name, None)
+
+        for dom, weights in self.rule_weights.items():
+            if clean_name in weights:
+                del weights[clean_name]
+
+        self._renormalize_distributions()
+        return removed
+
     def get_rule_distribution(self, domain: str) -> Dict[str, float]:
         """Return normalized rule probability distribution for the domain."""
         return dict(self.rule_weights.get(domain, {}))

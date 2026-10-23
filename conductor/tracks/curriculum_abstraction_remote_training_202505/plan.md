@@ -244,11 +244,11 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/cross_domain_validation.md`
   - **Pass-to-Complete Gate:** Audio, SDF, and Hardware test suites achieve $\ge 80\%$ task completion rate under matched compute budgets.
 
-- [ ] Task 6.4: Library Bloat Pruning & Resilient Offline Fallback
+- [x] Task 6.4: Library Bloat Pruning & Resilient Offline Fallback
   - **Objective:** Implement utility-based abstraction pruning (hard cap on library size with safe leaf inlining) and offline circuit breaker (local trajectory caching during cloud network partitions).
   - **Bottleneck Mitigation:** Preserves bounded search branching factor and 100% uptime when external networks are offline.
   - **Automated Test Definition:** `pytest -v tests/resilience/test_library_pruner.py tests/resilience/test_fallback.py`
-    - Invariants: Dependent abstractions never broken; inlining preserves semantics; synthesis continues during network drops.
+  - **Invariants:** Dependent abstractions never broken; inlining preserves semantics; synthesis continues during network drops.
   - **Documentation Artifact:** `docs/architecture/library_pruner.md`
   - **Pass-to-Complete Gate:** Pruner reduces library from 60 to 40 primitives safely; offline mode queues 100 trajectories without error.
 
