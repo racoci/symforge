@@ -2,7 +2,7 @@
 
 **Track ID:** `curriculum_abstraction_remote_training_202505`  
 **Spec Reference:** `conductor/tracks/curriculum_abstraction_remote_training_202505/spec.md`  
-**Status:** Approved  
+**Status:** Complete  
 **Date:** 2026-10-16  
 
 ---
@@ -216,11 +216,11 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
 
 ---
 
-## Phase 6: Meta-Controller, Cross-Domain Generalization & Risk Mitigation
+## Phase 6: Meta-Controller, Cross-Domain Generalization & Risk Mitigation [checkpoint: 6e8c0d7]
 
 Focus: Central orchestration loop, financial cost watchdog, cross-domain validation (including hardware instruction superoptimization), library bloat pruning, and offline degradation resilience.
 
-- [x] Task 6.1: Meta-Controller Regime Loop [6aa21e0]
+- [x] Task 6.1: Meta-Controller Regime Loop [846b5b4]
   - **Objective:** Build the central orchestration loop managing the wake-sleep cycle: (1) Synthesize on curriculum tasks, (2) Harvest trajectories, (3) Discover abstractions (sleep-compression), (4) Dispatch asynchronous remote LoRA fine-tuning.
   - **Bottleneck Mitigation:** Asynchronous orchestration; double-buffered adapter swapping prevents local synthesis from blocking on remote training jobs.
   - **Automated Test Definition:** `pytest -v tests/orchestration/test_meta_controller.py`
@@ -228,7 +228,7 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/meta_controller.md`
   - **Pass-to-Complete Gate:** 5 full wake-sleep iterations run with `MockComputeProvider` in < 2 seconds.
 
-- [x] Task 6.2: Financial Pre-Flight Cost Watchdog & Safety Gate
+- [x] Task 6.2: Financial Pre-Flight Cost Watchdog & Safety Gate [b66f535]
   - **Objective:** Implement `CostWatchdog` calculating projected job costs, enforcing hard session spending caps ($2.00 max), and intercepting unauthorized cloud dispatches.
   - **Bottleneck Mitigation:** Local zero-cost arithmetic check prior to every remote API invocation.
   - **Automated Test Definition:** `pytest -v tests/orchestration/test_cost_watchdog.py`
@@ -236,7 +236,7 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/cost_watchdog.md`
   - **Pass-to-Complete Gate:** Budget exhaustion test verifies zero unauthorized external API calls are made.
 
-- [x] Task 6.3: Cross-Domain Unified Validation & Transfer Benchmark (Audio, SDF, Hardware)
+- [x] Task 6.3: Cross-Domain Unified Validation & Transfer Benchmark (Audio, SDF, Hardware) [9e309a8]
   - **Objective:** Validate that the exact same synthesis and abstraction discovery engine operates successfully across Audio DSP, SDF 3D Geometry, and Hardware Instruction Superoptimization (BHive benchmark) without domain-specific algorithmic hacks.
   - **Bottleneck Mitigation:** Paired benchmark execution under identical resource budgets.
   - **Automated Test Definition:** `pytest -v tests/benchmarks/test_cross_domain_transfer.py`
@@ -244,7 +244,7 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/cross_domain_validation.md`
   - **Pass-to-Complete Gate:** Audio, SDF, and Hardware test suites achieve $\ge 80\%$ task completion rate under matched compute budgets.
 
-- [x] Task 6.4: Library Bloat Pruning & Resilient Offline Fallback
+- [x] Task 6.4: Library Bloat Pruning & Resilient Offline Fallback [6e8c0d7]
   - **Objective:** Implement utility-based abstraction pruning (hard cap on library size with safe leaf inlining) and offline circuit breaker (local trajectory caching during cloud network partitions).
   - **Bottleneck Mitigation:** Preserves bounded search branching factor and 100% uptime when external networks are offline.
   - **Automated Test Definition:** `pytest -v tests/resilience/test_library_pruner.py tests/resilience/test_fallback.py`
@@ -252,7 +252,7 @@ Focus: Central orchestration loop, financial cost watchdog, cross-domain validat
   - **Documentation Artifact:** `docs/architecture/library_pruner.md`
   - **Pass-to-Complete Gate:** Pruner reduces library from 60 to 40 primitives safely; offline mode queues 100 trajectories without error.
 
-- [ ] Task 6.5: Phase 6 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 6.5: Phase 6 Verification & Checkpoint (Refer to workflow.md) [6e8c0d7]
 
 ---
 
