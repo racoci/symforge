@@ -204,7 +204,7 @@ Focus: Subgraph anti-unification, Minimum Description Length (MDL) compression e
   - **Documentation Artifact:** `docs/architecture/grammar_expander.md`
   - **Pass-to-Complete Gate:** Synthesizer successfully uses newly invented macro-primitive in a subsequent synthesis task, reducing search steps by $> 40\%$.
 
-- [ ] Task 5.4: Competency Frontier Tracker & ZPD Sampler
+- [x] Task 5.4: Competency Frontier Tracker & ZPD Sampler
   - **Objective:** Implement the Competency Frontier engine tracking moving-average success rate $S(c)$ and sampling tasks from the Zone of Proximal Development ($0.2 \le S(c) \le 0.8$) across both audio and SDF tasks.
   - **Bottleneck Mitigation:** Pure statistics and sampling logic; decoupled from synthesis execution.
   - **Automated Test Definition:** `pytest -v tests/curriculum/test_frontier.py`
