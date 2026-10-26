@@ -83,7 +83,7 @@ graph TD
 
 Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4 syntax tokenization, implementing client-side TypeScript AST models mirroring SymForge Lean 4 IR, writing the bidirectional parser/pretty-printer, and wiring reactive state stores.
 
-- [ ] Task 1.1: Web Package Scaffolding (Vite + React 19 + TypeScript + Tailwind CSS)
+- [x] Task 1.1: Web Package Scaffolding (Vite + React 19 + TypeScript + Tailwind CSS)
   - **Objective:** Initialize `packages/web/` workspace with Vite, React 19, TypeScript (strict mode), Tailwind CSS, Vitest testing harness, and monorepo script integration.
   - **Bottleneck Mitigation:** Standalone workspace directory; isolated package configuration independent of Python or Lake builds.
   - **Automated Test Definition:** `npm --prefix packages/web test -- run` and `npm --prefix packages/web run build`

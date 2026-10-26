@@ -36,6 +36,11 @@ CMakeFiles/
 # Rust / Cargo artifacts
 target/
 
+# Node / Web artifacts
+node_modules/
+dist/
+.vitest/
+
 # Lean 4 / Lake artifacts
 .lake/
 *.olean
