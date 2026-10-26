@@ -1,18 +1,18 @@
 # Pluggable ComputeProvider Protocol & Data Contracts
 
-## 1. Visão Geral e Motivação Arquitetural
+## 1. Overview & Architectural Motivation
 
-No framework **SymForge**, a síntese de programas opera localmente em notebooks e estações de trabalho de desenvolvedores via busca heurística simbólica (Beam Search, A*), avaliação analítica rápida de DAGs e inferência prévia com modelos leves de prior em CPU. No entanto, o treinamento de redes neurais profundas (PDE, TGC e adaptadores LoRA de fine-tuning) exige computação intensiva acelerada por GPUs.
+In the **SymForge** framework, program synthesis executes locally on developer workstations via symbolic heuristic search (Beam Search, A*), rapid analytical DAG evaluations, and lightweight CPU prior inference. However, deep neural training (PDE, TGC, and fine-tuning specialized LoRA adapters) demands GPU acceleration.
 
-Para garantir **zero pegada de treinamento local** (*Zero Local Training Footprint*) e evitar acoplamento a provedores específicos de nuvem ou frameworks proprietários, o módulo `symforge.compute` estabelece uma camada de abstração assíncrona baseada em contratos estritos Pydantic e um protocolo tipado `typing.Protocol` desacoplado:
+To guarantee a **Zero Local Training Footprint** and prevent tight coupling to any single cloud platform or proprietary SDK, the `symforge.compute` module establishes a decoupled asynchronous abstraction layer governed by strict Pydantic v2 contracts and a `@runtime_checkable` `typing.Protocol`:
 
-1. **Desacoplamento Total:** O motor de síntese interage exclusivamente com a interface assíncrona `ComputeProvider`, sem conhecer detalhes de SDKs (Boto3, Modal SDK, Kubernetes API).
-2. **Contratos Tipados Estritos:** Payloads de treino (`TrainingPayload`), configurações de infraestrutura (`RemoteJobConfig`), telemetria de status (`JobStatusResponse`) e pesos de adaptadores (`AdapterArtifact`) possuem serialização bidirecional JSON 100% verificada com validação em tempo de execução via Pydantic v2.
-3. **Integridade Criptográfica:** Todos os pesos de adaptadores LoRA gerados remotamente são validados por hashes canônicos SHA-256 (64 caracteres hexadecimais) antes de qualquer injeção no ambiente de inferência.
+1. **Total Decoupling:** The synthesis engine interacts exclusively with the asynchronous `ComputeProvider` interface, without importing cloud provider SDKs (Boto3, Modal SDK, Kubernetes APIs).
+2. **Strict Typed Contracts:** Training payloads (`TrainingPayload`), infrastructure configurations (`RemoteJobConfig`), status telemetry (`JobStatusResponse`), and adapter weights (`AdapterArtifact`) feature 100% verified bidirectional JSON serialization with runtime schema enforcement via Pydantic v2.
+3. **Cryptographic Integrity:** All remotely trained LoRA adapter weights are verified against canonical 64-character hexadecimal SHA-256 checksums prior to injection into local inference memory.
 
 ---
 
-## 2. Arquitetura de Despacho Desacoplado (Decoupled Dispatch)
+## 2. Decoupled Dispatch Architecture
 
 ```text
 +---------------------------------------------------------------------------------------------------+
@@ -89,9 +89,9 @@ flowchart TD
 
 ---
 
-## 3. Especificação do Protocolo `ComputeProvider`
+## 3. `ComputeProvider` Protocol Specification
 
-O protocolo assíncrono é definido em `symforge.compute.protocol` e marcado com `@runtime_checkable`:
+The asynchronous protocol is defined in `symforge.compute.protocol` and decorated with `@runtime_checkable`:
 
 ```python
 @runtime_checkable
@@ -155,70 +155,70 @@ class ComputeProvider(Protocol):
 
 ---
 
-## 4. Contratos de Dados Pydantic v2
+## 4. Pydantic v2 Data Contracts
 
-Os contratos residem em `symforge.compute.contracts` e herdam de `pydantic.BaseModel` com configuração estrita (`frozen=True`, `extra="forbid"`):
+Data contracts reside in `symforge.compute.contracts` and inherit from `pydantic.BaseModel` configured strictly (`frozen=True`, `extra="forbid"`):
 
 ### 4.1 `JobStatus` & `ComputeDomain`
-- **`JobStatus`**: Enum representativo dos estados do ciclo de vida:
-  - `PENDING`: Enfileirado no provedor, aguardando alocação de nó/acelerador.
-  - `RUNNING`: Em execução ativa, emitindo métricas e progresso `progress_pct`.
-  - `COMPLETED`: Treinamento finalizado com sucesso; artefatos disponíveis para download.
-  - `FAILED`: Falha na execução (OOM, erro de script, timeout).
-  - `CANCELLED`: Interrompido voluntariamente via chamada a `cancel_job`.
-- **`ComputeDomain`**: Categorização do domínio de especialização (`"audio"`, `"sdf"`, `"hardware"`).
+- **`JobStatus`**: Enum representing lifecycle states:
+  - `PENDING`: Queued at provider, awaiting node/accelerator provisioning.
+  - `RUNNING`: Actively training, emitting loss metrics and `progress_pct`.
+  - `COMPLETED`: Training successfully concluded; artifacts ready for retrieval.
+  - `FAILED`: Execution failure (OOM, script error, timeout).
+  - `CANCELLED`: Voluntarily aborted via `cancel_job`.
+- **`ComputeDomain`**: Domain categorization (`"audio"`, `"sdf"`, `"hardware"`).
 
 ### 4.2 `TrainingPayload`
-Especifica o conjunto de dados e as metas de treinamento.
-- `trajectories_count: int` ($\ge 1$): Quantidade de trajetórias ou amostras.
-- `domain: ComputeDomain`: Domínio de aplicação.
-- `dataset_uri: Optional[str]`: URI remota (ex: `s3://...`, `https://...`, `file://...`).
-- `dataset_payload: Optional[Dict[str, Any]]`: Dicionário contendo dados inline quando não for utilizada URI.
-- `base_model_name: str`: Identificador do modelo base (ex: `"symforge-audio-pde-v1"`).
-- `model_type: str`: Categoria arquitetural (ex: `"pde"`, `"tgc"`, `"lora"`).
-- `hyperparameters: Dict[str, Any]`: Dicionário arbitrário de hiperparâmetros (lr, batch size, etc.).
-- `created_at: datetime`: Timestamp UTC de criação.
-- *Invariante:* Pelo menos um entre `dataset_uri` ou `dataset_payload` deve estar obrigatoriamente preenchido.
+Specifies training datasets and task metadata:
+- `trajectories_count: int` ($\ge 1$): Number of training trajectories or samples.
+- `domain: ComputeDomain`: Application domain.
+- `dataset_uri: Optional[str]`: Remote storage URI (e.g., `s3://...`, `https://...`, `file://...`).
+- `dataset_payload: Optional[Dict[str, Any]]`: Dictionary containing inline data when remote URI is not used.
+- `base_model_name: str`: Base model identifier (e.g., `"symforge-audio-pde-v1"`).
+- `model_type: str`: Model architecture category (e.g., `"pde"`, `"tgc"`, `"lora"`).
+- `hyperparameters: Dict[str, Any]`: Hyperparameter dictionary (lr, batch size, etc.).
+- `created_at: datetime`: UTC creation timestamp.
+- *Invariant:* At least one of `dataset_uri` or `dataset_payload` must be provided.
 
 ### 4.3 `RemoteJobConfig`
-Parâmetros de infraestrutura e governança financeira.
-- `provider_name: str`: Nome do backend (ex: `"mock"`, `"modal"`, `"sagemaker"`).
-- `hardware_accelerator: str`: Tipo de acelerador (`"CPU"`, `"T4"`, `"A10G"`, `"A100"`).
-- `timeout_seconds: float` ($> 0.0$): Tempo limite de execução em segundos.
-- `max_retries: int` ($\ge 0$): Limite de tentativas automáticas em falhas transitórias de infraestrutura.
-- `max_cost_usd: float` ($\ge 0.0$): Teto orçamentário em dólares.
-- `lora_rank: int` ($\ge 1$): Dimensão de rank $r$ do adaptador LoRA.
-- `lora_alpha: float` ($> 0.0$): Fator de escala $\alpha$.
-- `lora_dropout: float` ($0.0 \le p \le 1.0$): Probabilidade de dropout nas camadas adaptadas.
-- `tags: Dict[str, str]`: Metadados para rastreamento de custos e telemetria.
+Infrastructure and financial governance parameters:
+- `provider_name: str`: Backend identifier (e.g., `"mock"`, `"modal"`, `"sagemaker"`).
+- `hardware_accelerator: str`: Accelerator hardware type (`"CPU"`, `"T4"`, `"A10G"`, `"A100"`).
+- `timeout_seconds: float` ($> 0.0$): Hard execution timeout in seconds.
+- `max_retries: int` ($\ge 0$): Maximum retry attempts on transient network failures.
+- `max_cost_usd: float` ($\ge 0.0$): Upper spending limit in USD.
+- `lora_rank: int` ($\ge 1$): Rank dimension $r$ for the LoRA adapter.
+- `lora_alpha: float` ($> 0.0$): Scaling factor $\alpha$.
+- `lora_dropout: float` ($0.0 \le p \le 1.0$): Dropout probability on adapted layers.
+- `tags: Dict[str, str]`: Metadata tags for telemetry and cost tracking.
 
 ### 4.4 `JobStatusResponse`
-Feedback em tempo real do processamento remoto.
-- `job_id: str`: Identificador único do job.
-- `status: JobStatus`: Enum do estado atual.
-- `progress_pct: float` ($0.0 \le p \le 100.0$): Percentual de conclusão do job.
-- `error_message: Optional[str]`: Mensagem de erro em caso de status `FAILED`.
-- `started_at: Optional[datetime]`: Timestamp UTC de início do treino.
-- `completed_at: Optional[datetime]`: Timestamp UTC de término do treino.
-- `estimated_cost_usd: float` ($\ge 0.0$): Custo acumulado reportado pelo provedor.
-- `metrics: Dict[str, float]`: Métricas numéricas (ex: `train_loss`, `val_loss`, `val_f1`).
+Real-time execution feedback:
+- `job_id: str`: Unique job identifier.
+- `status: JobStatus`: Current execution status enum.
+- `progress_pct: float` ($0.0 \le p \le 100.0$): Completion percentage.
+- `error_message: Optional[str]`: Diagnostic failure message when status is `FAILED`.
+- `started_at: Optional[datetime]`: UTC start timestamp.
+- `completed_at: Optional[datetime]`: UTC completion timestamp.
+- `estimated_cost_usd: float` ($\ge 0.0$): Accumulated cost reported by backend.
+- `metrics: Dict[str, float]`: Numerical metrics (e.g., `train_loss`, `val_loss`, `val_f1`).
 
 ### 4.5 `AdapterArtifact`
-Metadados e transporte de pesos do adaptador compilado.
-- `adapter_id: str`: Identificador único do artefato.
-- `domain: ComputeDomain`: Domínio de aplicação.
-- `lora_rank: int` & `lora_alpha: float`: Dimensões da parametrização LoRA.
-- `target_modules: List[str]`: Módulos alvo adaptados na rede base.
-- `weights_checksum: str`: Hash canônico SHA-256 de 64 caracteres hexadecimais (normalizado para minúsculas).
-- `weights_uri: Optional[str]`: URI remota dos pesos.
-- `weights_bytes: Optional[bytes]`: Carga binária bruta dos pesos.
-- `weights_base64: Optional[str]`: Representação codificada em Base64 para serialização JSON direta.
-- `file_size_bytes: int` ($\ge 0$): Tamanho em bytes do arquivo de pesos.
-- `metadata: Dict[str, Any]`: Informações contextuais adicionais.
+Weight artifact metadata and transport:
+- `adapter_id: str`: Unique artifact identifier.
+- `domain: ComputeDomain`: Domain classification.
+- `lora_rank: int` & `lora_alpha: float`: LoRA rank and alpha scaling values.
+- `target_modules: List[str]`: Adapted module names in base network.
+- `weights_checksum: str`: Canonical 64-character hexadecimal SHA-256 hash.
+- `weights_uri: Optional[str]`: Remote download URI.
+- `weights_bytes: Optional[bytes]`: Raw binary tensor payload.
+- `weights_base64: Optional[str]`: Base64 encoded payload for JSON transport.
+- `file_size_bytes: int` ($\ge 0$): Artifact file size in bytes.
+- `metadata: Dict[str, Any]`: Contextual tags and configuration details.
 
 ---
 
-## 5. Máquina de Estados do Job (Job Status State Machine)
+## 5. Job Status State Machine
 
 ```text
 +---------------------------------------------------------------------------------------------------+
@@ -270,19 +270,19 @@ stateDiagram-v2
 
 ---
 
-## 6. Robustez, Guardrails e Tratamento de Exceções
+## 6. Robustness, Guardrails, and Exception Hierarchy
 
-O módulo define uma hierarquia de exceções específicas derivadas de `ComputeProviderError`:
+The module defines a strict hierarchy of domain exceptions derived from `ComputeProviderError`:
 
 ```text
 ComputeProviderError (Base)
-├── JobSubmissionError       (Rejeição do payload ou falta de cota)
-├── JobTimeoutError          (Excedido timeout_seconds na fila ou execução)
-├── ArtifactRetrievalError   (Falha no download ou divergência de checksum SHA-256)
-└── JobExecutionError        (Falha do script de treino remoto ou crash de nó)
+├── JobSubmissionError       (Payload rejection or quota exhaustion)
+├── JobTimeoutError          (Queue or execution duration exceeded timeout_seconds)
+├── ArtifactRetrievalError   (Download failure or SHA-256 checksum mismatch)
+└── JobExecutionError        (Remote script failure or cluster node crash)
 ```
 
-### 6.1 Princípios de Confiabilidade
-1. **Timeouts Explícitos:** Qualquer chamada de rede remota (envio, polling, download) deve ser encapsulada com `asyncio.wait_for(..., timeout=config.timeout_seconds)`.
-2. **Post-Mortem Logging:** Tratadores de exceções registram variáveis de contexto (job_id, prefixos de payload, status de conectividade) antes de reemitir erros específicos.
-3. **Validação de Invariantes em Tempo de Execução:** A função auxiliar `verify_compute_provider_conformance(candidate)` valida não apenas a presença de métodos do protocolo, mas também se são funções de corrotina assíncronas válidas.
+### 6.1 Reliability Guarantees
+1. **Explicit Timeouts:** Every remote asynchronous call is bounded with `asyncio.wait_for(..., timeout=config.timeout_seconds)`.
+2. **Post-Mortem Logging:** Exception handlers log relevant state variables (job_id, payload prefixes, connection endpoints) before raising typed exceptions.
+3. **Runtime Protocol Conformance:** The `verify_compute_provider_conformance(candidate)` utility validates that candidate objects implement all protocol methods as genuine asynchronous coroutines.

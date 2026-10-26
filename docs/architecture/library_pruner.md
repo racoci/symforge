@@ -1,143 +1,143 @@
 # Library Bloat Pruning & Resilient Offline Fallback
 
-## 1. Visão Geral e Princípios Arquiteturais
+## 1. Overview and Architectural Principles
 
-À medida que o ciclo contínuo do DreamCoder descobre e acumula abstrações ao longo de dezenas de ciclos de vigília e sono, o vocabulário da linguagem procedural $\Sigma$ cresce. Sem um mecanismo de controle rigoroso, o sistema sofre de **Inchaço de Biblioteca (*Library Bloat*)**:
-- **Explosão do Fator de Ramificação:** Na busca em feixe ou A*, cada buraco tipado (`HoleNode`) pode ser expandido por qualquer regra compatível. Com $|\Sigma| = 100$, o fator de ramificação infla para $O(B \cdot |\Sigma|)$, degradando a velocidade de síntese em ordem exponencial.
-- **Risco de Quebra em Cadeia:** Macros de ordem superior podem invocar macros mais simples (ex: `macro_flanged_cylinder` invocando `macro_hollow_cylinder`). Desregistrar uma macro ingênua sem rastreamento quebra todas as macros dependentes.
-- **Vulnerabilidade a Quedas de Rede:** Se a infraestrutura de treinamento remoto (Modal, SageMaker) sofrer instabilidade ou partição de rede, a síntese local não deve travar nem descartar trajetórias resolvidas.
+As the continual DreamCoder cycle discovers and accumulates procedural abstractions over dozens of wake-sleep iterations, the language vocabulary $\Sigma$ expands. Without strict capacity regulation, the system encounters **Library Bloat**:
+- **Branching Factor Inflation:** In Beam or A* search, each open typed hole (`HoleNode`) can be expanded by any compatible rule. As $|\Sigma|$ scales to dozens or hundreds of rules, the search branching factor balloons ($O(B \cdot |\Sigma|)$), exponentially degrading synthesis throughput.
+- **Cascading Breakage Risk:** Higher-order composite macros often invoke simpler macros (e.g., `macro_flanged_cylinder` calling `macro_hollow_cylinder`). Unregistering a macro without dependency tracking breaks all downstream callers.
+- **Network Disruption Vulnerability:** If remote cloud GPU infrastructure (Modal, SageMaker) experiences network partitions or transient outages, local synthesis must continue seamlessly without dropping harvested trajectories.
 
-O SymForge resolve esses riscos por meio de dois componentes complementares em `src/symforge/resilience/`:
-1. **`LibraryPruner`:** Rastreador de dependências topológico e podador de capacidade com **inlining seguro de folhas**.
-2. **`OfflineCircuitBreaker` & `OfflineTrajectoryQueue`:** Disjuntor de três estados e fila local resiliente com persistência em disco.
+SymForge addresses these failure modes via two resilient subsystems in `src/symforge/resilience/`:
+1. **`LibraryPruner`:** Topological dependency tracker and bounded-capacity pruner with **semantic safe leaf inlining**.
+2. **`OfflineCircuitBreaker` & `OfflineTrajectoryQueue`:** Three-state circuit breaker and resilient local queue with JSONL disk caching.
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                            ARQUITETURA DE RESILIÊNCIA E PODA DE BIBLIOTECA                        |
+|                        LIBRARY PRUNING & RESILIENT FALLBACK ARCHITECTURE                          |
 |                                                                                                   |
-|  [Expansão da Gramática (Task 5.3)]                                                               |
+|  [Grammar Expansion (Task 5.3)]                                                                   |
 |                 |                                                                                 |
 |                 v                                                                                 |
 |  +----------------------------------------------------+                                           |
-|  | DynamicGrammarLibrary (Capacidade Máxima: 40)      |                                           |
-|  | - Se len(macros) > 40: dispara LibraryPruner       |                                           |
+|  | DynamicGrammarLibrary (Max Capacity: 40)           |                                           |
+|  | - When len(macros) > 40: triggers LibraryPruner    |                                           |
 |  +-------------------------+--------------------------+                                           |
 |                            |                                                                      |
 |                            v                                                                      |
 |  +----------------------------------------------------+                                           |
-|  | MacroDependencyGraph (Grafo Dirigido Acíclico)     |                                           |
-|  | - Ordena candidatos por utilidade EMA (uso * ganho)|                                           |
-|  | - Macro interna com dependentes -> Safe Inlining   |                                           |
-|  | - Macro folha sem dependentes -> Evicção & PCFG Ren|                                           |
+|  | MacroDependencyGraph (Directed Acyclic Graph)      |                                           |
+|  | - Ranks candidates by EMA utility (usage * savings)|                                           |
+|  | - Internal macro with callers -> Safe Inlining     |                                           |
+|  | - Leaf macro without callers -> Clean Eviction     |                                           |
 |  +----------------------------------------------------+                                           |
 |                                                                                                   |
-|  [Despacho Remoto (Task 6.1 / 6.2)]                                                               |
+|  [Remote Dispatch (Task 6.1 / 6.2)]                                                               |
 |                 |                                                                                 |
 |                 v                                                                                 |
 |  +----------------------------------------------------+                                           |
 |  | OfflineCircuitBreaker (CLOSED -> OPEN -> HALF_OPEN)|                                           |
-|  | - Se falhas consecutivas >= 3: trips para OPEN     |                                           |
+|  | - When consecutive failures >= 3: trips to OPEN    |                                           |
 |  +-------------------------+--------------------------+                                           |
 |                            |                                                                      |
 |                 +----------+----------+                                                           |
 |                 | CLOSED              | OPEN                                                      |
 |                 v                     v                                                           |
 |  +-----------------------------+  +-----------------------------------+                           |
-|  | Despacho Normal em Nuvem    |  | OfflineTrajectoryQueue (Cap: 1000)|                           |
-|  | (Modal / SageMaker / Mock)  |  | - Buffers locais em memória/JSONL |                           |
-|  +-----------------------------+  | - Continua síntese sem travamento |                           |
+|  | Normal Cloud Dispatch       |  | OfflineTrajectoryQueue (Cap: 1000)|                           |
+|  | (Modal / SageMaker / Mock)  |  | - Local in-memory / JSONL buffers |                           |
+|  +-----------------------------+  | - Synthesis continues uninterrupted|                          |
 |                                   +-----------------+-----------------+                           |
 |                                                     | Reconnect                                   |
 |                                                     v                                             |
 |                                   +-----------------------------------+                           |
-|                                   | Flush automático em lote          |                           |
+|                                   | Automatic Batch Queue Flush       |                           |
 |                                   +-----------------------------------+                           |
 +---------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 graph TD
-    subgraph LibraryPruning [Poda de Inchaço de Biblioteca]
-        LIB[DynamicGrammarLibrary<br/>Capacidade Máxima: 40] -->|len > Cap| PRUNER[LibraryPruner]
-        PRUNER --> GRAPH[MacroDependencyGraph<br/>Topologia de Invocação]
-        GRAPH --> CHECK{Possui Dependentes?}
-        CHECK -- Sim --> INLINE[Safe Inlining Recursivo<br/>Substitui corpo nas macros chamadoras]
-        CHECK -- Não --> EVICT[Desregistro Limpo & Renormalização PCFG]
+    subgraph LibraryPruning [Library Bloat Pruning]
+        LIB[DynamicGrammarLibrary<br/>Maximum Capacity: 40] -->|len > Cap| PRUNER[LibraryPruner]
+        PRUNER --> GRAPH[MacroDependencyGraph<br/>Invocation Topology]
+        GRAPH --> CHECK{Has Dependents?}
+        CHECK -- Yes --> INLINE[Recursive Safe Inlining<br/>Substitutes body in calling macros]
+        CHECK -- No --> EVICT[Clean Eviction & PCFG Renormalization]
         INLINE --> EVICT
     end
 
-    subgraph ResilientFallback [Disjuntor e Fila Offline]
-        DISP[Despacho de Trajetórias] --> CB{OfflineCircuitBreaker}
-        CB -- CLOSED --> CLOUD[Nuvem Remota / Mock]
-        CB -- OPEN --> QUEUE[OfflineTrajectoryQueue<br/>Capacidade 1000 + Cache JSONL]
-        QUEUE --> RECONN{Rede Recuperada?}
-        RECONN -- Sim: HALF_OPEN -> CLOSED --> FLUSH[Flush em Lote para o Provedor]
+    subgraph ResilientFallback [Circuit Breaker & Offline Queue]
+        DISP[Trajectory Dispatch] --> CB{OfflineCircuitBreaker}
+        CB -- CLOSED --> CLOUD[Remote Cloud / Mock Backend]
+        CB -- OPEN --> QUEUE[OfflineTrajectoryQueue<br/>Capacity 1000 + JSONL Cache]
+        QUEUE --> RECONN{Network Restored?}
+        RECONN -- Yes: HALF_OPEN to CLOSED --> FLUSH[Batch Flush to Provider]
     end
 ```
 
 ---
 
-## 2. Poda de Biblioteca com Inlining Seguro
+## 2. Library Pruning with Safe Leaf Inlining
 
-### 2.1 Métrica de Utilidade Baseada em EMA
-Cada macro registrada rastreia seu histórico de contribuição:
-$$\text{Score}(M) = (1 - \alpha) \cdot \text{Score}_{\text{anterior}} + \alpha \cdot \left( \text{Uso}(M) \times \text{Economia}(M) \right)$$
-Macros que foram úteis em fases iniciais mas caíram em desuso têm sua pontuação atenuada exponencialmente.
+### 2.1 Exponential Moving Average (EMA) Utility Metric
+Each registered macro tracks historical utility:
+$$\text{Score}(M) = (1 - \alpha) \cdot \text{Score}_{\text{prev}} + \alpha \cdot \left( \text{Usage}(M) \times \text{Savings}(M) \right)$$
+Macros that provided early utility during initial bootstrap but fell out of frequent usage have their utility scores decayed.
 
-### 2.2 Grafo de Dependências e Inlining Semântico
-Se a macro de menor utilidade $A$ for invocada pela macro de ordem superior $B$:
-1. $A$ **não é simplesmente apagada**, pois isso quebraria $B$.
-2. O corpo sintático de $A$ é expandido diretamente dentro da definição de $B$ via `inline_macro_in_ast`.
-3. Os parâmetros de $A$ tornam-se parâmetros diretos de $B$.
-4. **Invariante de Execução:** $\text{Exec}(B_{\text{inlined}}) \equiv \text{Exec}(B_{\text{original}})$ dentro de $\epsilon < 10^{-5}$.
-5. Uma vez inlinada em todos os seus chamadores, $A$ torna-se uma folha e pode ser removida da biblioteca, reduzindo o vocabulário em 1 regra sem perda de capacidade expressiva.
+### 2.2 Dependency Graph & Semantic Safe Inlining
+When the lowest-utility macro $A$ is invoked by higher-order macro $B$:
+1. $A$ is **never abruptly deleted**, as doing so would invalidate $B$.
+2. The syntax tree of $A$ is expanded directly into $B$'s definition via `inline_macro_in_ast`.
+3. Parameter slots of $A$ are promoted to direct arguments of $B$.
+4. **Execution Invariance:** $\text{Exec}(B_{\text{inlined}}) \equiv \text{Exec}(B_{\text{original}})$ within $\epsilon < 10^{-5}$.
+5. Once inlined across all callers, $A$ becomes a dependency leaf and is safely unregistered from the grammar, reducing vocabulary count by 1 without breaking semantic coverage.
 
 ---
 
-## 3. Disjuntor de Rede (Circuit Breaker) e Fila Offline
+## 3. Network Circuit Breaker & Offline Queue
 
-### 3.1 Máquina de Estados do Disjuntor
-O `OfflineCircuitBreaker` implementa uma máquina de estados estrita:
-- **`CLOSED`:** Operação normal. Todas as requisições fluem para o provedor de computação.
-- **`OPEN`:** Disparado após $3$ falhas consecutivas de rede ou timeouts. Bloqueia chamadas externas imediatas por um período de recuperação ($30.0\text{ s}$).
-- **`HALF_OPEN`:** Ao expirar o tempo de recuperação, permite uma requisição de teste (*probe*). Se for bem-sucedida, restaura o estado para `CLOSED`. Se falhar, retorna para `OPEN`.
+### 3.1 Three-State Circuit Breaker
+The `OfflineCircuitBreaker` enforces strict state transitions:
+- **`CLOSED`:** Normal operation. All requests flow directly to the remote compute provider.
+- **`OPEN`:** Tripped after 3 consecutive network failures or timeouts. Blocks remote calls immediately for a 30-second recovery timeout.
+- **`HALF_OPEN`:** When the recovery timeout expires, permits a single probe request. If successful, resets to `CLOSED`. If failed, re-trips to `OPEN`.
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                             MÁQUINA DE ESTADOS DO CIRCUIT BREAKER                                 |
+|                             CIRCUIT BREAKER STATE MACHINE                                         |
 |                                                                                                   |
 |          +----------------------------------------------------+                                   |
 |          |                     CLOSED                         |                                   |
-|          |    (Provedor remoto saudável, tráfego liberado)    |                                   |
+|          |         (Healthy provider, traffic allowed)        |                                   |
 |          +-------------------------+--------------------------+                                   |
 |                     ^              |                                                              |
-|       Probe Sucesso |              | 3 Falhas Consecutivas                                        |
+|        Probe Success|              | 3 Consecutive Failures                                       |
 |                     |              v                                                              |
 |          +----------+--------------+--------------------------+                                   |
 |          |                    HALF_OPEN                       |                                   |
-|          |          (Sondagem de recuperação ativa)           |                                   |
+|          |             (Recovery probe active)                |                                   |
 |          +-------------------------+--------------------------+                                   |
 |                     ^              |                                                              |
-|        Timeout 30s  |              | Probe Falha                                                  |
+|        Timeout 30s  |              | Probe Fails                                                  |
 |                     |              v                                                              |
 |          +----------+--------------+--------------------------+                                   |
 |          |                      OPEN                          |                                   |
-|          |  (Rede com partição, desvios para fila offline)    |                                   |
+|          |       (Network partition, route to queue)          |                                   |
 |          +----------------------------------------------------+                                   |
 +---------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 stateDiagram-v2
-    [*] --> CLOSED: Inicialização
-    CLOSED --> OPEN: Falhas consecutivas >= 3
-    OPEN --> HALF_OPEN: Timeout de recuperação expirado (30s)
-    HALF_OPEN --> CLOSED: Probe de teste bem-sucedido
-    HALF_OPEN --> OPEN: Probe de teste falhou
+    [*] --> CLOSED: Initialization
+    CLOSED --> OPEN: Consecutive Failures >= 3
+    OPEN --> HALF_OPEN: Recovery Timeout Expired (30s)
+    HALF_OPEN --> CLOSED: Probe Succeeded
+    HALF_OPEN --> OPEN: Probe Failed
 ```
 
-### 3.2 Fila de Trajetórias Offline (`OfflineTrajectoryQueue`)
-Quando o disjuntor está em `OPEN`:
-- As trajetórias de vigília sintetizadas são enfileiradas em memória (`collections.deque(maxlen=1000)`) e persistidas em arquivo JSONL local.
-- O ciclo do meta-controlador continua rodando localmente sem exceções não-tratadas.
-- Assim que o disjuntor retorna para `CLOSED`, o método `flush_to_provider` descarrega todas as trajetórias pendentes em lotes assíncronos para o `ComputeProvider`.
+### 3.2 Offline Trajectory Queue (`OfflineTrajectoryQueue`)
+When the breaker is `OPEN`:
+- Harvested synthesis trajectories are buffered in memory (`collections.deque(maxlen=1000)`) and appended to a local JSONL cache file.
+- The meta-controller continues local synthesis with zero unhandled exceptions.
+- Once connectivity is restored and the breaker enters `CLOSED`, `flush_queued_trajectories_async` flushes all buffered trajectories in asynchronous batches to the `ComputeProvider`.

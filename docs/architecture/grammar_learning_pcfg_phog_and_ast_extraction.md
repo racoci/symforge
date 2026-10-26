@@ -1,45 +1,45 @@
-# Engenharia de Gramáticas Probabilísticas: Extração de ASTs, PCFGs, PHOGs e Mitigação do Viés Sintético
+# Probabilistic Grammar Engineering: AST Extraction, PCFGs, PHOGs, and Mitigating the Synthetic Prior Trap
 
-## 1. Visão Geral e o Desafio Fundamental
+## 1. Overview and the Core Scientific Challenge
 
-Para que o **SymForge** aprenda a guiar a busca simbólica e a sintetizar programas complexos de forma eficiente, ele necessita de uma distribuição de probabilidade sobre derivações gramaticais:
+For **SymForge** to guide symbolic discrete search and synthesize complex procedural programs efficiently, it requires an informed probability distribution over grammatical derivations:
 
-$$\mathbb{P}(\text{produção } r \mid \text{contexto } c)$$
+$$\mathbb{P}(\text{production } r \mid \text{context } c)$$
 
-Embora repositórios públicos contenham terabytes de código-fonte aberto (como *The Stack* ou *CodeSearchNet*), encontrar **ASTs serializadas exatamente no formato tipado da nossa DSL (Lean 4)** não é trivial. Além disso, existe uma armadilha científica crítica no uso exclusivo de geradores sintéticos:
+While public open-source code repositories contain terabytes of programs (e.g., *The Stack*, *CodeSearchNet*), finding **ASTs serialized exactly in the typed format required by our Lean 4 DSL** is rare. Furthermore, there is a fundamental scientific pitfall when relying solely on synthetic procedural generators:
 
-> **A Armadilha do Viés Sintético (Self-Mimicry Trap):**  
-> Se gerarmos milhões de árvores sintéticas a partir de uma gramática com probabilidades uniformes ou arbitrárias e treinarmos uma PCFG ou rede neural diretamente sobre elas, o modelo aprenderá apenas a **reproduzir a distribuição artificial escolhida a priori**. Isso não ensina ao modelo quais regras são úteis, eficientes, estáveis ou perceptualmente relevantes para o ser humano.
+> **The Synthetic Prior Trap (Self-Mimicry Trap):**  
+> If we generate millions of synthetic trees from a grammar using uniform or arbitrary prior weights and train a PCFG or neural model directly on them, the model merely learns to **mimic the arbitrary prior chosen by the developer**. It does not learn which rules are actually useful, compact, numerically stable, or perceptually meaningful to human observers.
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                               PIPELINE DE INGESTÃO E APRENDIZADO DE GRAMÁTICAS                    |
+|                            GRAMMAR INGESTION & LEARNING PIPELINE                                  |
 |                                                                                                   |
-|  [Código Real: OpenSCAD, Faust, Dexed, DeepCAD]     [Gerador Sintético Controlado (PCFG)]         |
+|  [Real Code: OpenSCAD, Faust, Dexed, DeepCAD]       [Controlled PCFG Synthetic Generator]        |
 |                         |                                             |                           |
 |                         v                                             v                           |
 |             +-----------------------+                     +-----------------------+               |
-|             | Tree-sitter / Parsers |                     | Amostragem com        |               |
-|             | (CST Normalization)   |                     | Filtros de Validade   |               |
+|             | Tree-sitter / Parsers |                     | Sampling with Triple  |               |
+|             | (CST Normalization)   |                     | Quality Filters       |               |
 |             +-----------+-----------+                     +-----------+-----------+               |
 |                         |                                             |                           |
 |                         v                                             v                           |
 |             +-----------------------------------------------------------------+                   |
-|             |       AST Tipada Canônica (Lean 4 / SymForge AST/DAG)           |                   |
+|             |           Canonical Typed AST (Lean 4 / SymForge AST/DAG)       |                   |
 |             +--------------------------------+--------------------------------+                   |
 |                                              |                                                    |
 |                                              v                                                    |
 |             +-----------------------------------------------------------------+                   |
-|             |          Extrator de Produções Supervisionadas                  |                   |
-|             |  (Não-Terminal, Regra, Ancestrais, Irmãos, Tipos, Parâmetros)  |                   |
+|             |            Supervised Production Tuple Harvester                |                   |
+|             |  (Nonterminal, Rule, Ancestors, Siblings, Types, Free Parameters)|                   |
 |             +--------------------------------+--------------------------------+                   |
 |                                              |                                                    |
 |                   +--------------------------+--------------------------+                         |
 |                   |                          |                          |                         |
 |                   v                          v                          v                         |
 |        +--------------------+     +--------------------+     +--------------------+               |
-|        | Nível 1: PCFG      |     | Nível 2: PHOG      |     | Nível 3: Neural    |               |
-|        | (Marginal Context- |     | (Higher-Order      |     | (PDE/TGC           |               |
+|        | Level 1: PCFG      |     | Level 2: PHOG      |     | Level 3: Neural    |               |
+|        | (Marginal Context- |     | (Higher-Order      |     | (PDE / TGC         |               |
 |        |  Free Frequencies) |     |  Conditioned AST)  |     |  Deep Embeddings)  |               |
 |        +--------------------+     +--------------------+     +--------------------+               |
 +---------------------------------------------------------------------------------------------------+
@@ -47,88 +47,86 @@ Embora repositórios públicos contenham terabytes de código-fonte aberto (como
 
 ```mermaid
 graph TD
-    subgraph RawCorpora [Fontes de Dados Brutas]
-        R1[Corpora Reais: OpenSCAD / DeepCAD CAD]
-        R2[Corpora Reais: Faust / Dexed / SuperCollider DSP]
-        R3[Gerador Procedural PCFG com Filtros de Estabilidade]
+    subgraph RawCorpora [Raw Data Sources]
+        R1[Real Corpora: OpenSCAD / DeepCAD CAD]
+        R2[Real Corpora: Faust / Dexed / SuperCollider DSP]
+        R3[Procedural PCFG Generator with Quality Filters]
     end
 
-    subgraph ParserNormalization [Normalização Sintática]
-        R1 --> TS1[Tree-sitter / Normalizador CST -> AST]
+    subgraph ParserNormalization [Syntactic Normalization]
+        R1 --> TS1[Tree-sitter / Normalizer CST to AST]
         R2 --> TS2[Domain Parsers: JSON / SYSEX / Faust AST]
-        R3 --> TS3[AST Nativa Lean 4]
-        TS1 --> AST[AST Canônica Tipada SymForge]
+        R3 --> TS3[Native Lean 4 AST]
+        TS1 --> AST[Canonical Typed SymForge AST]
         TS2 --> AST
         TS3 --> AST
     end
 
-    subgraph TupleExtraction [Extração Supervisionada de Produções]
-        AST --> EXT[Extrator de Decisões Sintáticas<br/>Tuple: NonTerminal, Rule, Context, Type]
+    subgraph TupleExtraction [Supervised Production Extraction]
+        AST --> EXT[Syntactic Decision Harvester<br/>Tuple: NonTerminal, Rule, Context, Type]
     end
 
-    subgraph ProbabilisticHierarchy [Hierarquia de Modelos de Produção]
-        EXT --> M_PCFG[Nível 1: PCFG Clássica<br/>Probabilidades Marginais Livres de Contexto]
-        EXT --> M_PHOG[Nível 2: PHOG Higher-Order<br/>Condicionamento em Ancestrais e Irmãos]
-        EXT --> M_NEURAL[Nível 3: Redes Neurais PDE / TGC<br/>Embeddings Contínuos + Percepção]
+    subgraph ProbabilisticHierarchy [Production Model Hierarchy]
+        EXT --> M_PCFG[Level 1: Classical PCFG<br/>Marginal Context-Free Probabilities]
+        EXT --> M_PHOG[Level 2: Higher-Order PHOG<br/>Conditioned on Ancestors & Siblings]
+        EXT --> M_NEURAL[Level 3: Neural PDE / TGC<br/>Continuous Embeddings + Perceptual Priors]
     end
 ```
 
 ---
 
-## 2. Taxonomia de Fontes de Dados e Corpora de Domínio
+## 2. Taxonomy of Data Sources and Domain Corpora
 
-Para alimentar a gramática sem cair no isolamento sintético, o SymForge estrutura sua ingestão a partir de três fontes complementares:
+To feed the grammar engine without falling into synthetic isolation, SymForge sources program structures from three complementary avenues:
 
-### 2.1 Domínio Geométrico (SDF / 3D CSG)
-1. **OpenSCAD Repository Scrapers (GitHub / Thingiverse):**
-   - *Natureza:* Código declarativo puramente funcional que combina primitivas 3D (`cube`, `sphere`, `cylinder`), transformações afins (`translate`, `rotate`, `scale`, `multmatrix`) e operadores booleanos (`union`, `difference`, `intersection`).
-   - *Volume disponível:* Mais de 100.000 modelos OpenSCAD abertos indexados no GitHub e Thingiverse.
-   - *Conversão:* Parser Tree-sitter para OpenSCAD converte o CST diretamente na hierarquia `SDFNode` da nossa DSL.
-2. **DeepCAD (Sequências Onshape):**
-   - *Natureza:* 178.238 modelos CAD decompostos em sequências explícitas de comandos de desenho (esboço 2D, extrusão, corte, revolução).
-   - *Conversão:* Os comandos de extrusão e corte mapeiam-se isotopicamente para cilindros/cubos combinados por `DifferenceNode` e `UnionNode`.
+### 2.1 Geometric Domain (SDF / 3D CSG)
+1. **OpenSCAD Repositories (GitHub / Thingiverse):**
+   - *Nature:* Purely declarative functional code combining 3D analytical primitives (`cube`, `sphere`, `cylinder`), affine transformations (`translate`, `rotate`, `scale`), and boolean CSG operations (`union`, `difference`, `intersection`).
+   - *Available Volume:* Over 100,000 public OpenSCAD models.
+   - *Conversion:* Tree-sitter OpenSCAD parser converts CSTs directly into SymForge's `SDFNode` class hierarchy.
+2. **DeepCAD (Onshape Sequences):**
+   - *Nature:* 178,238 CAD models decomposed into explicit command sequences (2D sketch, extrude, cut, revolve).
+   - *Conversion:* Extrusion and cut operations map onto cubes/cylinders combined via `DifferenceNode` and `UnionNode`.
 3. **Shadertoy Raymarching Collection:**
-   - *Natureza:* Coleção de mais de 10.000 shaders GLSL especializados em SDFs procedurais de autores humanos (ex: funções de distância de Inigo Quilez).
-   - *Conversão:* Extrator de subexpressões matemáticas de raymarching para ASTs da DSL.
+   - *Nature:* Collection of over 10,000 procedural GLSL shaders authored by human developers (e.g., Inigo Quilez distance functions).
+   - *Conversion:* Math parser extracts analytical raymarching subexpressions into DSL ASTs.
 
-### 2.2 Domínio de Áudio (1D Procedural DSP)
-1. **Bancos Dexed / Yamaha DX7 (FM Synthesis):**
-   - *Natureza:* > 25.000 patches de síntese FM armazenados em formato binário SYSEX ou JSON, especificando a topologia exata dos 6 operadores (algoritmos 1 a 32), envelopes EG de 4 estágios e índices de modulação.
-   - *Conversão:* Mapeador direto de grafos de modulação de frequência para árvores `FMNode(carrier, mod)`.
+### 2.2 Audio Domain (1D Procedural DSP)
+1. **Dexed / Yamaha DX7 Patches (FM Synthesis):**
+   - *Nature:* Over 25,000 FM synthesis patches stored in SYSEX binary or JSON format, specifying the exact operator routing graph (algorithms 1 through 32), 4-stage envelopes, and modulation indices.
+   - *Conversion:* Directly maps carrier-modulator trees into `FMNode(carrier, mod)` and `MixNode`.
 2. **Faust DSP Standard Libraries:**
-   - *Natureza:* Linguagem de programação funcional para DSP. Contém implementações canônicas de osciladores, filtros biquad, envelopes e geradores de ruído compostos puramente por álgebra de circuitos de sinal (`:`, `,`, `<:`, `:>`).
-   - *Conversão:* Compilador do Faust pode emitir a representação intermediária em JSON/XML, perfeitamente convertível para `AudioNode`.
+   - *Nature:* Functional programming language for real-time DSP. Contains canonical implementations of oscillators, biquad filters, and envelopes composed via signal circuit algebra.
+   - *Conversion:* Faust compiler exports intermediate JSON ASTs, mapped into `AudioNode`.
 3. **SuperCollider SynthDefs & Csound Orchestras:**
-   - *Natureza:* Milhares de grafos de sintetizadores analógicos virtuais modulares compartilhados publicamente na comunidade de áudio computacional.
+   - *Nature:* Thousands of virtual analog modular synthesizer graphs shared in computational music repositories.
 
-### 2.3 Domínio de Código Geral & Superotimização
-1. **CodeSearchNet & The Stack:**
-   - *Natureza:* Milhões de funções em Python, C e Rust para benchmarks de gramáticas gerais.
-2. **BHive:**
-   - *Natureza:* Blocos básicos Assembly x86 para treinar modelos sobre grafos de dependência de instruções e superotimização de hardware.
+### 2.3 General Code & Hardware Optimization
+1. **CodeSearchNet & The Stack:** Millions of open-source functions for general grammar benchmarks.
+2. **BHive:** Real x86-64 basic blocks for instruction dependency graph learning and superoptimization.
 
 ---
 
-## 3. O Pipeline de Ingestão: CST para AST Canônica com Tree-sitter
+## 3. Ingestion Pipeline: CST to Canonical AST via Tree-Sitter
 
-O Tree-sitter gera uma **Concrete Syntax Tree (CST)**, que contém nós gramaticais brutos, pontuação, delimitadores e comentários. O SymForge implementa um pipeline formal de **CST $\to$ AST Normalizada**:
+Tree-sitter generates a **Concrete Syntax Tree (CST)**, retaining punctuation, trivia tokens, and formatting. SymForge runs a semantic normalization pipeline:
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                            PIPELINE DE NORMALIZAÇÃO CST -> AST CANÔNICA                           |
+|                            CST TO CANONICAL AST NORMALIZATION PIPELINE                            |
 |                                                                                                   |
-|  Código Fonte OpenSCAD / Faust / Python                                                           |
-|  Exemplo: difference() { translate([0,0,10]) cube(20); sphere(5); }                               |
+|  Source Code: OpenSCAD / Faust / Python                                                           |
+|  Example: difference() { translate([0,0,10]) cube(20); sphere(5); }                               |
 |                                 |                                                                 |
 |                                 v                                                                 |
 |  [Tree-sitter Concrete Syntax Tree (CST)]                                                         |
 |  (module_call (identifier "difference") (arguments) (body (module_call ...)))                    |
 |                                 |                                                                 |
-|                                 v Normalizador Semântico (Pruning de parênteses, vírgulas, whitespace)
-|  [AST Não-Tipada Intermediária]                                                                   |
+|                                 v Semantic Normalizer (Prunes syntax trivia, collapses brackets)  |
+|  [Untyped Intermediate AST]                                                                       |
 |                                 |                                                                 |
-|                                 v Validador de Tipos & Descoberta de FreeParam (Lean 4 Bridge)    |
-|  [AST Canônica SymForge / Lean 4 Inductive Node]                                                  |
+|                                 v Type Checker & FreeParam Binders (Lean 4 Bridge)                |
+|  [Canonical SymForge AST / Lean 4 Inductive Node]                                                 |
 |  DifferenceNode(                                                                                  |
 |    TranslateNode(CubeNode(w, h, d), [x, y, z]),                                                   |
 |    SphereNode(radius)                                                                             |
@@ -138,21 +136,21 @@ O Tree-sitter gera uma **Concrete Syntax Tree (CST)**, que contém nós gramatic
 
 ```mermaid
 graph TD
-    SRC[Código Fonte: OpenSCAD, Faust, GLSL] --> TS[Tree-sitter Parser]
-    TS --> CST[Concrete Syntax Tree CST<br/>Nós sintáticos, pontuação, tokens triviais]
-    CST --> NORM[Normalizador Semântico<br/>Elimina pontuação, colapsa identidades]
-    NORM --> TYPER[Validador de Tipos & Hole Binders Lean 4]
-    TYPER --> AST[AST Canônica SymForge<br/>Instâncias de AudioNode / SDFNode com FreeParam]
-    AST --> DAG[Canonical Hash-Consed DAG<br/>Eliminação de Subexpressões Comuns CSE]
+    SRC[Source Code: OpenSCAD, Faust, GLSL] --> TS[Tree-sitter Parser]
+    TS --> CST[Concrete Syntax Tree CST<br/>Syntax trivia, commas, whitespace tokens]
+    CST --> NORM[Semantic Normalizer<br/>Prunes trivia, collapses identities]
+    NORM --> TYPER[Type Validator & Hole Binders Lean 4]
+    TYPER --> AST[Canonical SymForge AST<br/>AudioNode / SDFNode with FreeParams]
+    AST --> DAG[Canonical Hash-Consed DAG<br/>Common Subexpression Elimination CSE]
 ```
 
 ---
 
-## 4. Esquema de Extração de Produções Supervisionadas
+## 4. Supervised Production Decision Extraction Schema
 
-Para cada nó $u$ presente em uma AST ou DAG canônico, o extrator decompõe o processo de construção em uma decisão de derivação formal:
+For each node $u$ in an AST or canonical DAG, the extractor decomposes program construction into formal derivation tuples:
 
-### 4.1 Formato da Tupla de Decisão Gramatical
+### 4.1 Production Tuple Data Schema
 ```json
 {
   "nonterminal": "SDF",
@@ -170,7 +168,7 @@ Para cada nó $u$ presente em uma AST ou DAG canônico, o extrator decompõe o p
 }
 ```
 
-Para uma folha com parâmetros:
+For parameterized leaf nodes:
 ```json
 {
   "nonterminal": "SDF",
@@ -185,132 +183,123 @@ Para uma folha com parâmetros:
   "expected_type": "SDF",
   "num_free_params": 1,
   "free_params": [
-    {"id": "radius", "minVal": 0.01, "maxVal": 50.0, "defaultVal": 1.0}
+    {"id": "radius", "min_val": 0.01, "max_val": 50.0, "default_val": 1.0}
   ]
 }
 ```
 
 ---
 
-## 5. A Hierarquia de Modelos de Gramática: PCFG vs. PHOG vs. Neural
+## 5. Grammar Model Hierarchy: PCFG vs. PHOG vs. Neural
 
-Com as tuplas de derivação extraídas, podemos instanciar e comparar três níveis progressivos de sofisticação:
+Harvested derivation tuples power three levels of probabilistic modeling:
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                               HIERARQUIA DE MODELAGEM PROBABILÍSTICA                              |
+|                               PROBABILISTIC MODELING HIERARCHY                                    |
 |                                                                                                   |
-|  Nível 1: PCFG (Context-Free)      Nível 2: PHOG (Higher-Order)       Nível 3: Neural PDE / TGC   |
+|  Level 1: PCFG (Context-Free)      Level 2: PHOG (Higher-Order)       Level 3: Neural PDE / TGC   |
 |  ----------------------------      ---------------------------        -------------------------   |
-|  P(A -> alpha)                     P(A -> alpha | Contexto c)         P(A -> alpha | c, x)        |
-|  - Independente de contexto        - Condicionado em Ancestrais       - Embedding contínuo de c   |
-|  - Simples, estimativa MLE         - Captura padrões aninhados        - Condicionado no alvo x    |
-|  - Linha de base estocástica       - Suavização por Backoff / Dirichlet- Generaliza p/ grafos novos|
+|  P(A -> alpha)                     P(A -> alpha | Context c)          P(A -> alpha | c, x)        |
+|  - Independent of context          - Conditioned on Ancestors/Siblings- Continuous c embeddings   |
+|  - Closed-form MLE calculation     - Captures nested macro patterns   - Conditioned on target x   |
+|  - Stochastic baseline             - Jelinek-Mercer Backoff smoothing - Generalizes to novel trees|
 +---------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 graph LR
-    subgraph L1 [Nível 1: PCFG]
-        A1[Não-Terminal A] -->|Frequência Marginal| R1["Regra A -> alpha"]
+    subgraph L1 [Level 1: PCFG]
+        A1[Nonterminal A] -->|Marginal Frequency| R1["Rule A -> alpha"]
     end
 
-    subgraph L2 [Nível 2: PHOG Higher-Order]
-        A2[Não-Terminal A] --> C2[Contexto: Pai, Avô, Irmão]
-        C2 -->|Frequência Condicional| R2["Regra A -> alpha | Contexto"]
+    subgraph L2 [Level 2: Higher-Order PHOG]
+        A2[Nonterminal A] --> C2[Context: Parent, Grandparent, Sibling]
+        C2 -->|Conditional Frequency| R2["Rule A -> alpha | Context"]
     end
 
-    subgraph L3 [Nível 3: Redes Neurais PDE / TGC]
-        A3[Não-Terminal A] --> E3[Embedding Neural do Contexto]
-        X3[Observação Alvo x: STFT / Superfície] --> E3
-        E3 -->|Softmax Guiada por Tipos| R3[Distribuição sobre Produções]
+    subgraph L3 [Level 3: Neural PDE / TGC]
+        A3[Nonterminal A] --> E3[Neural Context Embedding]
+        X3[Target Observation x: STFT / Surface] --> E3
+        E3 -->|Type-Constrained Softmax| R3[Distribution over Productions]
     end
 ```
 
-### 5.1 Nível 1: PCFG (Probabilistic Context-Free Grammar)
-A probabilidade de aplicar a produção $A \to \alpha$ depende unicamente do símbolo não-terminal $A$:
+### 5.1 Level 1: PCFG (Probabilistic Context-Free Grammar)
+Production probability depends strictly on the nonterminal symbol $A$:
 
 $$\mathbb{P}_{\text{PCFG}}(A \to \alpha) = \frac{\text{Count}(A \to \alpha) + \alpha_{\text{prior}}}{\sum_{\alpha' \in \mathcal{R}(A)} \left( \text{Count}(A \to \alpha') + \alpha_{\text{prior}} \right)}$$
 
-- *Vantagem:* Cálculo analítico trivial via Maximum Likelihood Estimation (MLE) com suavização de Laplace/Dirichlet ($\alpha_{\text{prior}} > 0$).
-- *Limitação:* Não diferencia se um oscilador `Sine` está sendo instanciado como fonte sonora principal ou como modulador LFO de baixa frequência dentro de um nó de filtro.
+- *Strength:* Closed-form analytical estimation with Laplace/Dirichlet smoothing ($\alpha_{\text{prior}} > 0$).
+- *Limitation:* Does not distinguish whether an oscillator `Sine` serves as a carrier source or as a low-frequency modulator inside a filter cutoff input.
 
-### 5.2 Nível 2: PHOG (Probabilistic Higher-Order Grammar)
-A probabilidade é condicionada em um **caminho de contexto estrutural** $c = (\text{Pai}, \text{Avô}, \text{IrmãoEsquerdo})$:
+### 5.2 Level 2: PHOG (Probabilistic Higher-Order Grammar)
+Conditions production choice on a **structural context path** $c = (\text{Parent}, \text{Grandparent}, \text{LeftSibling})$:
 
-$$\mathbb{P}_{\text{PHOG}}(A \to \alpha \mid c) = \lambda_1 \frac{\text{Count}(A \to \alpha, c)}{\text{Count}(A, c)} + \lambda_2 \frac{\text{Count}(A \to \alpha, \text{Pai}(c))}{\text{Count}(A, \text{Pai}(c))} + \lambda_3 \mathbb{P}_{\text{PCFG}}(A \to \alpha)$$
+$$\mathbb{P}_{\text{PHOG}}(A \to \alpha \mid c) = \lambda_1 \frac{\text{Count}(A \to \alpha, c)}{\text{Count}(A, c)} + \lambda_2 \frac{\text{Count}(A \to \alpha, \text{Parent}(c))}{\text{Count}(A, \text{Parent}(c))} + \lambda_3 \mathbb{P}_{\text{PCFG}}(A \to \alpha)$$
 
-Onde $\lambda_1 + \lambda_2 + \lambda_3 = 1$ é um mecanismo de **Jelinek-Mercer Smoothing / Backoff**, permitindo que o sistema caia suavemente para contextos menores quando um contexto específico é inédito.
-- *Vantagem:* Aprende regras como "Dentro de uma `Difference`, a probabilidade do segundo filho ser `Cylinder` é 4x maior do que a média geral (furos mecânicos)".
+Where $\lambda_1 + \lambda_2 + \lambda_3 = 1.0$ implements **Jelinek-Mercer Smoothing / Backoff**, gracefully falling back to simpler contexts when encountering rare structural environments.
+- *Strength:* Learns empirical design heuristics: e.g., "Inside a `Difference` operator, the probability of the right child being a `Cylinder` is 4x higher than the global baseline (representing mechanical drill holes)".
 
-### 5.3 Nível 3: Modelos Neurais da Pipeline (PDE & TGC)
-Integra o sinal perceptual contínuo $x$ (espectro ou malha) com a gramática simbólica:
+### 5.3 Level 3: Neural Pipeline Models (PDE & TGC)
+Integrates continuous sensory features $x$ (audio spectrogram or surface probe) with symbolic grammar:
+
 $$\mathbb{P}_{\text{Neural}}(A \to \alpha \mid c, x) = \text{Softmax}\left( \frac{\mathbf{W}_A \cdot \phi(c, x)}{\tau} \right)$$
-- Utiliza a saída do **Modelo 1 (PDE)** que informa quais primitivas e profundidades existem no sinal de entrada para polarizar a escolha das regras do **Modelo 2 (TGC)**.
 
 ---
 
-## 6. Mitigação da "Armadilha do Viés Sintético" (Self-Mimicry Trap)
+## 6. Mitigating the "Synthetic Prior Trap" (Self-Mimicry Prevention)
 
-Para garantir que o gerador sintético produza programas **relevantes, variados e não-triviais** em vez de poluição combinatória:
+To guarantee that procedurally generated synthetic data produces **meaningful, non-trivial, and diverse** training programs:
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                        FILTRAGEM DE QUALIDADE E DIVERSIDADE DO GERADOR SINTÉTICO                  |
+|                        TRIPLE QUALITY FILTERING PROTOCOL FOR PCFG DATA                            |
 |                                                                                                   |
-|  [Gerador Procedural PCFG]                                                                        |
+|  [Stochastic PCFG Generator]                                                                      |
 |              |                                                                                    |
 |              v                                                                                    |
-|  [Candidato Sintético (G, Theta)]                                                                 |
-|              |                                                                                    |
-|              v                                                                                    |
-|  +-------------------------------------+                                                          |
-|  | FILTRO 1: Validade Física & Execução| ---> Descarta nós mortos, clipping e booleanos vazios   |
-|  +-------------------------------------+                                                          |
+|  [Candidate Program (G, Theta)]                                                                   |
 |              |                                                                                    |
 |              v                                                                                    |
 |  +-------------------------------------+                                                          |
-|  | FILTRO 2: Entropia Perceptual       | ---> Descarta silêncio, DC offset e formas invisíveis    |
+|  | FILTER 1: Physical Validity & Exec  | ---> Rejects clipping, dead branches, and empty booleans |
+|  +-------------------------------------+                                                          |
+|              |                                                                                    |
+|              v                                                                                    |
+|  +-------------------------------------+                                                          |
+|  | FILTER 2: Perceptual Entropy        | ---> Rejects silence, DC flatline, and vanishing shapes  |
 |  |           (Non-Triviality Check)    |                                                          |
 |  +-------------------------------------+                                                          |
 |              |                                                                                    |
 |              v                                                                                    |
 |  +-------------------------------------+                                                          |
-|  | FILTRO 3: Deduplicação Estrutural   | ---> Rejeita duplicatas semânticas via Canonical DAG     |
+|  | FILTER 3: Semantic Deduplication    | ---> Rejects semantic duplicates via Canonical DAG       |
 |  |           (Hash-Consing / CSE)      |                                                          |
 |  +-------------------------------------+                                                          |
 |              |                                                                                    |
 |              v                                                                                    |
-|  [Programa Sintético Aceito para Treinamento de Modelos 1, 2 e 3]                                 |
+|  [Approved Synthetic Program for Model 1, 2, and 3 Training]                                     |
 +---------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 graph TD
-    GEN[Gerador PCFG Estocástico] --> P[Candidato Gerado G, Theta]
-    P --> F1{Filtro 1: Validade Física<br/>Áudio: clipping, pólos estáveis<br/>SDF: bounding box overlap}
-    F1 -- Falha --> DROP[Descarta Programa]
-    F1 -- Passa --> F2{Filtro 2: Entropia Perceptual<br/>Áudio: espectro não-silencioso<br/>SDF: volume > epsilon}
-    F2 -- Falha --> DROP
-    F2 -- Passa --> F3{Filtro 3: Deduplicação Semântica<br/>DAG hash-consing: nós idênticos?}
-    F3 -- Duplicata --> DROP
-    F3 -- Único --> OK[Programa Aprovado no Corpus Sintético de Treino]
+    GEN[Stochastic PCFG Generator] --> P[Candidate Program G, Theta]
+    P --> F1{Filter 1: Physical Validity<br/>Audio: clipping, stable poles<br/>SDF: bounding box overlap}
+    F1 -- Fails --> DROP[Discard Program]
+    F1 -- Passes --> F2{Filter 2: Perceptual Entropy<br/>Audio: non-silent spectrum<br/>SDF: non-zero volume}
+    F2 -- Fails --> DROP
+    F2 -- Passes --> F3{Filter 3: Semantic Deduplication<br/>DAG hash-consing: identical subgraphs?}
+    F3 -- Duplicate --> DROP
+    F3 -- Unique --> OK[Approved into Synthetic Training Corpus]
 ```
 
-### Protocolo de Validação Tripla:
-1. **Filtro de Validade Física:**
-   - *Áudio:* O sinal $s(t)$ deve satisfazer $0.05 \le \max |s(t)| \le 1.0$ (rejeita áudio inaudível e áudio com saturação digital).
-   - *SDF:* O campo $d(\mathbf{p})$ deve ter pelo menos um ponto onde $d(\mathbf{p}) < 0$ e normais $\|\nabla d\| \approx 1.0$ (rejeita sólidos imaginários ou degenerados).
-2. **Filtro de Entropia Perceptual:**
-   - A distribuição de energia no espectrograma ou na densidade de pontos da isosuperfície deve ter entropia de Shannon acima de um limiar mínimo, garantindo complexidade e riqueza acústica/geométrica.
-3. **Filtro de Diversidade Estrutural (DAG Hash-Consing):**
-   - Árvores que colapsam para o mesmo DAG canônico (identificadas na Fase 1 por CSE) são deduplicadas para evitar que versões triviais super-representem certas produções.
-
----
-
-## 7. Integração no Roteiro da Fase 2
-
-Este documento estabelece as diretrizes para a execução das tarefas da Fase 2:
-- **Task 2.1 e 2.2:** Devem implementar os extratores de características e operadores de renderização sobre os quais os filtros de entropia perceptual atuarão.
-- **Task 2.3:** O gerador `pcfg.py` deve incorporar a tripla filtragem (Física, Entropia, Diversidade) e estratificação por complexidade (L1 a L5).
-- **Task 2.4:** O extrator de datasets (`harvester.py`) exportará diretamente as tuplas de decisões sintáticas no formato especificado na Seção 4, alimentando a comparação entre PCFG, PHOG e Modelos Neurais na Fase 3.
+### The Triple Quality Filtering Protocol:
+1. **Physical Validity Filter:**
+   - *Audio:* Signal satisfies $0.05 \le \max |s(t)| \le 1.0$ (rejects inaudible whispers and digital clipping).
+   - *SDF:* Field $d(\mathbf{p})$ satisfies zero-crossing ($\exists \mathbf{p}_1, \mathbf{p}_2: d(\mathbf{p}_1) < 0 \land d(\mathbf{p}_2) > 0$) and normal unit vectors $\|\nabla d\| \approx 1.0$.
+2. **Perceptual Entropy Filter:**
+   - The spectral energy distribution or isosurface point cloud density must exceed a minimum Shannon entropy threshold, guaranteeing non-trivial acoustic/geometric content.
+3. **Semantic Deduplication Filter (DAG Hash-Consing):**
+   - Syntactically distinct trees collapsing to identical canonical DAGs (via CSE) are deduplicated, preventing trivial structural variants from skewing empirical grammar statistics.

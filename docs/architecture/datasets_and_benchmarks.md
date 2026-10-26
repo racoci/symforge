@@ -1,177 +1,177 @@
-# Catálogo de Datasets e Benchmarks: Áudio, SDFs e Generalização
+# Dataset and Benchmark Catalog: Audio, SDFs, and Generalization
 
-Este documento cataloga todos os datasets, corpora sintéticos e benchmarks relevantes para o desenvolvimento, treinamento, validação e teste dos três pilares do **SymForge**:
+This document catalogs all datasets, synthetic corpora, and benchmarks relevant to the development, training, validation, and testing of the three pillars of **SymForge**:
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                              TAXONOMIA DE DATASETS DO SYMFORGE                                    |
+|                              SYMFORGE DATASET TAXONOMY                                            |
 |                                                                                                   |
-|  Nível 1: Dados Procedurais PCFG       Nível 2: Benchmarks Controlados    Nível 3: Dados Reais / OOD|
-|  (Treino & Currículo Sintético)        (Comparação com Baselines)        (Generalização Perceptual) |
-|  -------------------------------       -------------------------------   -------------------------- |
-|  - Audio-PCFG Generator                - Dexed / Synth1 Patch Corpus     - FSD50K & ESC-50          |
-|  - SDF-PCFG CSG Generator              - NSynth (Acoustic & Synth Notes) - ABC CAD Dataset (1M CAD) |
-|  - Synthetic Invariant Task Corpora    - CSGNet 2D/3D Synthetic Trees   - ShapeNetCore / PartNet   |
-|  - Paired Contrastive Negative Banks   - DreamCoder Domain Suites        - Thingi10K Real Meshes    |
+|  Tier 1: Procedural PCFG Data          Tier 2: Controlled Benchmarks      Tier 3: Real / OOD Data |
+|  (Synthetic Training & Curriculum)     (Baseline Direct Comparisons)      (Perceptual Transfer)   |
+|  ---------------------------------     -----------------------------      ----------------------- |
+|  - Audio-PCFG Generator                - Dexed / Synth1 Patch Corpora     - FSD50K & ESC-50       |
+|  - SDF-PCFG CSG Generator              - NSynth (Acoustic & Synth Notes)  - ABC CAD Dataset (1M)  |
+|  - Synthetic Invariant Task Corpora    - CSGNet 2D/3D Synthetic Trees     - ShapeNetCore / PartNet|
+|  - Paired Contrastive Negative Banks   - DreamCoder Domain Suites         - Thingi10K Real Meshes |
 +---------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 graph TD
-    subgraph Tier1 [Nível 1: Treinamento Procedural PCFG]
-        T1_A[Audio PCFG Generator<br/>Timbre, Envelopes, Modulações]
-        T1_B[SDF PCFG Generator<br/>CSG 3D, Primitivas, Blends]
-        T1_C[Negative Distractor Banks<br/>Pares Contrastivos Negativos]
+    subgraph Tier1 [Tier 1: Procedural PCFG Training]
+        T1_A[Audio PCFG Generator<br/>Timbre, Envelopes, Modulations]
+        T1_B[SDF PCFG Generator<br/>3D CSG, Primitives, Blends]
+        T1_C[Negative Distractor Banks<br/>Paired Contrastive Distractors]
     end
 
-    subgraph Tier2 [Nível 2: Benchmarks Controlados]
-        T2_A[NSynth Subset<br/>Timbre & Atributos Acústicos]
-        T2_B[Synth1 / Dexed Patches<br/>Parâmetros de Síntese Conhecidos]
-        T2_C[CSGNet 3D Benchmark<br/>Árvores CSG Canônicas]
-        T2_D[DreamCoder Suite<br/>Métricas de Library Learning]
+    subgraph Tier2 [Tier 2: Controlled Benchmarks]
+        T2_A[NSynth Subset<br/>Timbre & Acoustic Attributes]
+        T2_B[Synth1 / Dexed Patches<br/>Known Synthesis Parameters]
+        T2_C[CSGNet 3D Benchmark<br/>Canonical CSG Trees]
+        T2_D[DreamCoder Suite<br/>Library Learning Metrics]
     end
 
-    subgraph Tier3 [Nível 3: Generalização Real OOD]
-        T3_A[FSD50K & ESC-50<br/>Eventos Acústicos & Foley]
-        T3_B[ABC CAD Dataset<br/>Peças Industriais Mecânicas]
-        T3_C[ShapeNet & PartNet<br/>Objetos 3D Sintetizáveis]
+    subgraph Tier3 [Tier 3: Real OOD Generalization]
+        T3_A[FSD50K & ESC-50<br/>Acoustic Events & Foley]
+        T3_B[ABC CAD Dataset<br/>Industrial Mechanical Parts]
+        T3_C[ShapeNet & PartNet<br/>Synthesizable 3D Objects]
     end
 
-    Tier1 -->|Treino Inicial & Currículo| ENGINE[Motor Neurosimbólico SymForge]
-    Tier2 -->|Ablações & Comparação Direta| ENGINE
-    Tier3 -->|Teste de Transferência OOD| ENGINE
+    Tier1 -->|Initial Training & ZPD Curriculum| ENGINE[SymForge Neurosymbolic Engine]
+    Tier2 -->|Ablations & Direct Baselines| ENGINE
+    Tier3 -->|OOD Transfer Evaluation| ENGINE
 ```
 
 ---
 
-## 1. Pilar 1: Sintetizador de Áudio (1D Procedural DSP)
+## 1. Pillar 1: Audio Synthesizer (1D Procedural DSP)
 
-### 1.1 Gerador Procedural Interno: `Audio-PCFG` (Treinamento Contínuo & Currículo)
-- **Tipo:** Gerador procedural estocástico em memória (zero download).
-- **Conteúdo:** Programas aleatórios amostrados a partir da gramática de áudio (osciladores, envelopes ADSR, moduladores LFO/FM, filtros biquad).
-- **Anotações:** AST/DAG do programa gerador, parâmetros contínuos de síntese e forma de onda renderizada em 44.1 kHz / 16 kHz.
-- **Função no Projeto:** Serve como o motor do currículo adaptativo na Zona de Desenvolvimento Proximal (ZPD), gerando alvos com complexidade crescente (de tons puros a texturas percussivas e pads polifônicos).
+### 1.1 In-Memory Procedural Generator: `Audio-PCFG` (Continuous Training & Curriculum)
+- **Type:** In-memory stochastic procedural generator (zero download footprint).
+- **Contents:** Random programs sampled from the audio domain grammar (oscillators, ADSR envelopes, LFO/FM modulators, biquad filters).
+- **Annotations:** Generator program AST/DAG, continuous synthesis parameters, and rendered audio waveforms at 16 kHz / 44.1 kHz.
+- **Role in SymForge:** Drives the adaptive curriculum inside the Zone of Proximal Development (ZPD), generating targets with scalable complexity (from pure tones to percussive textures and complex multi-timbral patches).
 
 ### 1.2 NSynth (Neural Audio Synthesis Dataset - Magenta / Google Brain)
-- **Origem / Referência:** [Google Magenta NSynth](https://magenta.tensorflow.org/datasets/nsynth)
-- **Volume:** ~305.979 notas musicais individuais (4 segundos, 16 kHz).
-- **Características:** 1.006 instrumentos musicais cobrindo 11 famílias de instrumentos (bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal) e 5 fontes acústicas (acústico, eletrônico, sintético).
-- **Anotações Relevantes:** Pitch MIDI, velocity, família do instrumento, tags acústicas (*brightness, warmth, percussive, distortion, fast_decay*).
-- **Uso no SymForge:** Benchmark padrão para avaliar a capacidade do sintetizador de reconstruir timbres de referência e extrair macro-primitivas de famílias instrumentais (ex: ataque percussivo para `mallet`, modulação FM para `synth_lead`).
+- **Origin / Reference:** [Google Magenta NSynth](https://magenta.tensorflow.org/datasets/nsynth)
+- **Volume:** ~305,979 individual musical notes (4 seconds, 16 kHz).
+- **Characteristics:** 1,006 musical instruments spanning 11 instrument families (bass, brass, flute, guitar, keyboard, mallet, organ, reed, string, synth_lead, vocal) and 5 acoustic sources (acoustic, electronic, synthetic).
+- **Relevant Annotations:** MIDI pitch, velocity, instrument family, acoustic quality tags (*brightness, warmth, percussive, distortion, fast_decay*).
+- **Role in SymForge:** Standard benchmark to evaluate the synthesizer's ability to reconstruct reference acoustic timbres and discover macro-primitives across instrument families (e.g., percussive transient attacks for `mallet`, FM modulations for `synth_lead`).
 
-### 1.3 Synth1 & Dexed FM Patch Corpora (Bancos de Patches de Sintetizadores Reais)
-- **Origem:** Bancos comunitários abertos de patches para sintese subtrativa (Synth1) e sintese por modulação de frequência (Yamaha DX7 / Dexed).
-- **Volume:** > 25.000 patches com parâmetros conhecidos.
-- **Características:** Estruturas explícitas de operadores, modulações de fase, frequências carrier/modulator e envelopes.
-- **Uso no SymForge:** Teste de reconstituição de parâmetros e inferência estrutural de programas analógicos/FM onde o "código fonte" (grafo de síntese) é conhecido com precisão cirúrgica.
+### 1.3 Synth1 & Dexed FM Patch Corpora (Real Synthesizer Patch Banks)
+- **Origin:** Open community patch banks for subtractive synthesis (Synth1) and frequency modulation synthesis (Yamaha DX7 / Dexed).
+- **Volume:** > 25,000 patches with known ground-truth parameters.
+- **Characteristics:** Explicit operator routings, phase modulations, carrier/modulator frequency ratios, and multi-stage envelopes.
+- **Role in SymForge:** Exact parameter recovery and structural inference benchmark where the ground-truth "source code" (synthesis graph) is known with analytical precision.
 
 ### 1.4 FSD50K (Freesound Dataset 50K) & ESC-50
-- **Origem:** [FSD50K Zenodo](https://zenodo.org/record/4060432) e [ESC-50 GitHub](https://github.com/karolpiczak/ESC-50)
-- **Volume:** 51.197 clipes de áudio (FSD50K) e 2.000 gravações ambientais (ESC-50).
-- **Características:** Sons ambientais, impactos, cliques mecânicos, vento, água, motores e texturas naturais.
-- **Uso no SymForge:** Avaliação de generalização fora da distribuição (Out-Of-Distribution - OOD) para verificar se o framework sintetiza sons procedurais não estritamente musicais (foley, efeitos sonoros).
+- **Origin:** [FSD50K Zenodo](https://zenodo.org/record/4060432) and [ESC-50 GitHub](https://github.com/karolpiczak/ESC-50)
+- **Volume:** 51,197 audio clips (FSD50K) and 2,000 environmental recordings (ESC-50).
+- **Characteristics:** Environmental sounds, mechanical impacts, water, wind, motors, and natural textures.
+- **Role in SymForge:** Out-Of-Distribution (OOD) generalization evaluation to verify whether the framework can synthesize non-musical procedural sounds (foley, sound effects).
 
-### 1.5 Modelos de Representação Pré-treinados (Espaço de Contraste para Perda Perceptual)
-- **CLAP (Contrastive Language-Audio Pretraining - LAION / Microsoft):** Codificador acústico congelado mapeando sinais de áudio para espaço latente vetorial normalizado de 512D.
-- **OpenL3 / VGGish:** Extratores de representação perceptual temporal-frequencial para ancoragem do cálculo de perda contrastiva InfoNCE.
+### 1.5 Pretrained Acoustic Embeddings (Contrastive Perceptual Loss Latents)
+- **CLAP (Contrastive Language-Audio Pretraining - LAION / Microsoft):** Frozen acoustic encoder projecting audio waveforms into a normalized 512D latent space.
+- **OpenL3 / VGGish:** Multi-resolution temporal-frequency perceptual representations for InfoNCE contrastive perceptual loss calculation.
 
 ---
 
-## 2. Pilar 2: Sintetizador de SDFs (3D Implicit Geometry)
+## 2. Pillar 2: SDF Synthesizer (3D Implicit Geometry)
 
-### 2.1 Gerador Procedural Interno: `SDF-PCFG` (Treinamento Contínuo & Currículo)
-- **Tipo:** Gerador procedural estocástico em memória (zero download).
-- **Conteúdo:** Expressões booleanas CSG e campos implícitos amostrados com restrições de contenção espacial e overlaps não-vazios.
-- **Anotações:** Grafo DAG do programa de geometria, parâmetros contínuos de dimensão/translação e consultas de pontos espaciais com distância calculada analiticamente.
-- **Função no Projeto:** Base do currículo adaptativo geométrico, escalando de formas primitivas isoladas até peças complexas com furos, chanfros e relevos.
+### 2.1 In-Memory Procedural Generator: `SDF-PCFG` (Continuous Training & Curriculum)
+- **Type:** In-memory stochastic procedural generator (zero download footprint).
+- **Contents:** CSG boolean expressions and implicit distance fields sampled under containment constraints and non-empty intersections.
+- **Annotations:** Canonical DAG of the geometry program, continuous dimension/translation parameters, and analytical distance probe coordinates.
+- **Role in SymForge:** Foundation of the geometric adaptive curriculum, scaling from isolated primitive shapes up to complex mechanical parts with holes, chamfers, and smooth blends.
 
-### 2.2 ABC Dataset (A Big CAD Model Dataset)
-- **Origem / Referência:** [ABC Dataset NYU](https://deep-geometry.github.io/abc-dataset/)
-- **Volume:** > 1.000.000 de modelos CAD tridimensionais limpos.
-- **Características:** Peças industriais e mecânicas reais com superfícies analíticas parametrizadas (planos, cilindros, cones, esferas, toros, curvas B-spline).
-- **Uso no SymForge:** O padrão ouro absoluto para avaliar a fidelidade da síntese CSG e validar a redução do custo computacional ($C_H$) em hardware de renderização/CAD.
+### 2.2 ABC Dataset (A Big CAD Model Dataset - NYU)
+- **Origin / Reference:** [ABC Dataset NYU](https://deep-geometry.github.io/abc-dataset/)
+- **Volume:** > 1,000,000 clean 3D CAD models.
+- **Characteristics:** Real industrial mechanical parts with parameterized analytical surfaces (planes, cylinders, cones, spheres, tori, B-spline curves).
+- **Role in SymForge:** Absolute gold standard for validating CSG synthesis fidelity and confirming compiled hardware execution cost reduction ($C_H$) on CAD/rendering pipelines.
 
 ### 2.3 CSGNet Synthetic Benchmark (CSG-2D & CSG-3D)
-- **Origem:** [CSGNet Paper & Code](https://github.com/Hippogriff/CSGNet)
-- **Volume:** ~100.000 pares de programas CSG sintéticos e malhas/voxels renderizados.
-- **Características:** Árvores sintéticas de profundidade 3 a 7 combinando cubos, esferas e cilindros com operações de união, interseção e diferença.
-- **Uso no SymForge:** Baseline direto para comparação de eficiência estrutural, tempo de busca e número de nós sintetizados contra o CSGNet original.
+- **Origin:** [CSGNet Paper & Code](https://github.com/Hippogriff/CSGNet)
+- **Volume:** ~100,000 pairs of synthetic CSG programs and rendered voxel/mesh representations.
+- **Characteristics:** Synthetic trees of depth 3 to 7 combining cubes, spheres, and cylinders with union, intersection, and difference operations.
+- **Role in SymForge:** Direct baseline for evaluating structural search efficiency, step counts, and compiled node complexity against the original CSGNet.
 
 ### 2.4 ShapeNetCore & PartNet
-- **Origem:** [ShapeNet.org](https://shapenet.org/) e [PartNet](https://partnet.cs.stanford.edu/)
-- **Volume:** ~51.300 modelos CAD limpos distribuídos em 55 categorias comuns (cadeiras, mesas, aviões, carros), com segmentação hierárquica de partes em PartNet.
-- **Uso no SymForge:** Teste de capacidade de generalização e descoberta de abstrações compostas (ex: identificar a subestrutura "pé de cadeira" ou "asa de avião" e promovê-la a macro-primitiva).
+- **Origin:** [ShapeNet.org](https://shapenet.org/) and [PartNet](https://partnet.cs.stanford.edu/)
+- **Volume:** ~51,300 clean CAD models across 55 common categories (chairs, tables, airplanes, cars), with hierarchical part segmentations in PartNet.
+- **Role in SymForge:** Evaluates abstraction discovery of semantic composite primitives (e.g., discovering "chair leg" or "airplane wing" and promoting it to a first-class macro).
 
 ### 2.5 Thingi10K
-- **Origem:** [Thingi10K Dataset](https://ten-thousand-models.appspot.com/)
-- **Volume:** 10.000 malhas 3D prontas para impressão 3D criadas por designers humanos.
-- **Uso no SymForge:** Teste de robustez perante geometrias orgânicas e não-ideais, testando a resiliência da perda contrastiva contra imperfeições de superfície.
+- **Origin:** [Thingi10K Dataset](https://ten-thousand-models.appspot.com/)
+- **Volume:** 10,000 3D meshes designed by human makers for 3D printing.
+- **Role in SymForge:** Robustness testing on non-ideal, organic geometries, verifying contrastive loss stability against surface imperfections.
 
 ### 2.6 DeepSDF Query Points Dataset
-- **Origem:** Repositório oficial do DeepSDF (Park et al., CVPR 2019).
-- **Conteúdo:** Milhões de pares $(\mathbf{p}, d(\mathbf{p}))$ amostrados próximos às superfícies ($\varepsilon$-boundary) de objetos ShapeNet.
-- **Uso no SymForge:** Conjunto de dados padronizado para ajuste fino de parâmetros contínuos por gradiente e validação do avaliador vetorizado NumPy.
+- **Origin:** Official DeepSDF repository (Park et al., CVPR 2019).
+- **Contents:** Millions of coordinate pairs $(\mathbf{p}, d(\mathbf{p}))$ sampled near surfaces ($\varepsilon$-boundary) of ShapeNet objects.
+- **Role in SymForge:** Standardized dataset for continuous parameter gradient descent validation and fast NumPy/PyTorch module verification.
 
 ---
 
-## 3. Pilar 3: Generalização e Meta-Aprendizado
+## 3. Pillar 3: Generalization and Meta-Learning
 
 ### 3.1 DreamCoder Benchmark Suites
-- **Origem:** Ellis et al., "DreamCoder: Growing generalizable, interpretable knowledge with program synthesis" (2021).
-- **Domínios Incluídos:**
-  - *2D Turtle Graphics (LOGO):* Desenho vetorial procedimental por primitivas de movimento e repetição.
-  - *RegEx & String Manipulation:* Expressões regulares e gramáticas de transformação textual.
-  - *List Processing:* Operações de ordem superior estilo Lisp (`map`, `filter`, `fold`).
-- **Métricas Relevantes:** Taxa de compressão por Descrição Mínima (MDL), taxa de reutilização de bibliotecas aprendidas e velocidade de solução de tarefas inéditas.
-- **Uso no SymForge:** Validação da generalização agnóstica do algoritmo de anti-unificação e expansão de gramática.
+- **Origin:** Ellis et al., "DreamCoder: Growing generalizable, interpretable knowledge with program synthesis" (2021).
+- **Included Domains:**
+  - *2D Turtle Graphics (LOGO):* Procedural vector drawing via movement, repetition, and rotation primitives.
+  - *RegEx & String Manipulation:* Regular expressions and text transformation grammars.
+  - *List Processing:* Higher-order functional Lisp-style operations (`map`, `filter`, `fold`).
+- **Relevant Metrics:** Minimum Description Length (MDL) compression gain, learned library reuse rate, and search speedup on held-out tasks.
+- **Role in SymForge:** Validates domain-agnostic syntactic anti-unification (LGG) and dynamic grammar expansion.
 
 ### 3.2 dPads & NEAR Evaluation Environments
-- **Origem:** [dPads (NeurIPS 2023)](https://github.com/RU-Automated-Reasoning-Group/dPads) e [NEAR (ICLR 2022)](https://github.com/trishullab/near)
-- **Conteúdo:** Ambientes de busca com gramáticas livres de contexto e heurísticas neurais sobre programas parciais tipados.
-- **Uso no SymForge:** Baseline comparativo direto para avaliar se o uso de relaxações de produções gramaticais e busca guiada por A* supera a enumeração cega e superestruturas fixas.
+- **Origin:** [dPads (NeurIPS 2023)](https://github.com/RU-Automated-Reasoning-Group/dPads) and [NEAR (ICLR 2022)](https://github.com/trishullab/near)
+- **Contents:** Program search environments with context-free grammars and neural heuristics over typed partial programs.
+- **Role in SymForge:** Comparative baseline evaluating whether typed hole expansions with A* search outperform blind enumeration and superstructures.
 
 ### 3.3 ARC (Abstraction and Reasoning Corpus) & Mini-ARC
-- **Origem:** François Chollet (2019) e Mini-ARC.
-- **Conteúdo:** Tarefas de raciocínio lógico-visual que exigem inferência de transformações a partir de poucos exemplos (few-shot).
-- **Uso no SymForge:** Benchmark prospectivo para testar o limite superior de generalização do framework fora de domínios contínuos físicos.
+- **Origin:** François Chollet (2019) and Mini-ARC.
+- **Contents:** Visual-logical few-shot reasoning tasks requiring procedural transformation inference.
+- **Role in SymForge:** Prospective upper-bound generalization benchmark outside continuous physical modalities.
 
 ---
 
-## 4. Matriz Comparativa de Uso no Ciclo de Vida do Projeto
+## 4. Lifecycle Application Matrix
 
 ```text
 +-------------------------------------------------------------------------------------------------------------------------------+
-|                                      MATRIZ DE APLICAÇÃO DOS DATASETS NO SYMFORGE                                              |
+|                                      DATASET APPLICATION MATRIX IN SYMFORGE                                                  |
 |                                                                                                                               |
-| Dataset / Corpus          Pilar     Fase de Uso        Volume / Custo      Papel Primário no Ciclo                            |
+| Dataset / Source          Pillar    Active Phase       Volume / Storage    Primary Role in Lifecycle                          |
 | ------------------------  --------  -----------------  ------------------  -------------------------------------------------- |
-| Audio-PCFG Generator      Áudio     Fase 1, 2, 5       Infinito / Zero     Currículo dinâmico, pares positivos/negativos      |
-| SDF-PCFG Generator        SDF       Fase 1, 3, 5       Infinito / Zero     Currículo dinâmico, campos de distância sintéticos |
-| NSynth (Subset)           Áudio     Fase 2, 6          ~10k amostras       Benchmark de timbres e acurácia de parâmetros      |
-| Dexed / Synth1 Banks      Áudio     Fase 2             ~5k patches         Recuperação de grafos analógicos e FM conhecidos   |
-| CSGNet 3D Benchmark       SDF       Fase 3, 6          ~10k árvores CSG    Comparação com estado da arte em síntese de forma  |
-| ABC Dataset (Partes 0-5)  SDF       Fase 3, 6          ~50k modelos CAD    Validação em geometria mecânica realista           |
-| FSD50K / ESC-50           Áudio     Fase 6             ~2k clipes          Generalização OOD para foley e texturas            |
-| ShapeNetCore (Selected)   SDF       Fase 6             ~5k modelos         Descoberta de abstrações semânticas em objetos 3D  |
-| DreamCoder Suite          Geral     Fase 5, 6          ~500 tarefas        Validação agnóstica de Library Learning e MDL      |
+| Audio-PCFG Generator      Audio     Phases 1, 2, 5     Infinite / Zero     ZPD curriculum, contrastive positive/negative pairs|
+| SDF-PCFG Generator        SDF       Phases 1, 3, 5     Infinite / Zero     ZPD curriculum, synthetic distance fields          |
+| NSynth (Subset)           Audio     Phases 2, 6        ~10k samples        Timbre benchmark and continuous parameter accuracy |
+| Dexed / Synth1 Banks      Audio     Phase 2            ~5k patches         Exact analog and FM graph recovery                 |
+| CSGNet 3D Benchmark       SDF       Phases 3, 6        ~10k CSG trees      Direct baseline comparison in shape synthesis      |
+| ABC Dataset (Chunks 0-5)  SDF       Phases 3, 6        ~50k CAD models     Realistic industrial mechanical CAD validation     |
+| FSD50K / ESC-50           Audio     Phase 6            ~2k clips           OOD generalization for foley and acoustic textures |
+| ShapeNetCore (Selected)   SDF       Phase 6            ~5k models          Semantic abstraction discovery in 3D objects       |
+| DreamCoder Suite          General   Phases 5, 6        ~500 tasks          Domain-agnostic library learning & MDL validation  |
 +-------------------------------------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 graph LR
-    subgraph CoreLifecycle [Ciclo de Treinamento e Validação]
-        P_GEN[PCFG Generators: Áudio & SDF<br/>Infinito / Zero Custo de Armazenamento] -->|Treinamento Contínuo & ZPD| SYNTH[Sintetizador SymForge]
-        SYNTH -->|Validação Controlada| B_CTRL[Benchmarks Canônicos:<br/>CSGNet 3D, NSynth, Dexed]
-        SYNTH -->|Aferição de Generalização| B_REAL[Datasets Reais & OOD:<br/>ABC CAD, FSD50K, ShapeNet]
-        SYNTH -->|Validação de Abstrações| B_DREAM[DreamCoder Suites:<br/>Taxa de Compressão MDL]
+    subgraph CoreLifecycle [Training and Validation Lifecycle]
+        P_GEN[PCFG Generators: Audio & SDF<br/>Infinite / Zero Disk Footprint] -->|Continuous Training & ZPD| SYNTH[SymForge Synthesizer Engine]
+        SYNTH -->|Controlled Validation| B_CTRL[Canonical Benchmarks:<br/>CSGNet 3D, NSynth, Dexed]
+        SYNTH -->|Generalization Proof| B_REAL[Real & OOD Datasets:<br/>ABC CAD, FSD50K, ShapeNet]
+        SYNTH -->|Abstraction Validation| B_DREAM[DreamCoder Suites:<br/>MDL Compression Gain]
     end
 ```
 
 ---
 
-## 5. Estratégia de Armazenamento, Cache e Execução Local Leve
+## 5. Storage, Cache, and Lightweight Local Execution Strategy
 
-Para honrar a diretriz central de **não sobrecarregar a máquina local com dados pesados ou treinamentos caros**:
-1. **Prioridade Zero-Disk:** Os geradores `Audio-PCFG` e `SDF-PCFG` residem no código e são instanciados sob demanda em memória RAM (consumo $< 200 \text{ MB}$).
-2. **Subsets Filtrados para CI / Testes Unitários:** Para os datasets externos (NSynth, CSGNet, ABC), serão extraídos pacotes canônicos ultraleves (ex: `tests/fixtures/nsynth_mini.npz` com 50 amostras, `tests/fixtures/csg_mini.json` com 50 árvores, totalizando $< 15 \text{ MB}$ versionados com o repositório).
-3. **Download Sob Demanda para Benchmarks Pesados:** Os arquivos pesados brutos (gigas de malhas ou áudios) serão referenciados via scripts de streaming ou montagem em nuvem (S3 / Modal volumes) durante execuções despachadas, nunca bloqueando o repositório local.
+To uphold the core mandate of **zero heavy local storage or compute overhead**:
+1. **Zero-Disk Priority:** `Audio-PCFG` and `SDF-PCFG` generators reside entirely in memory (< 200 MB RAM allocation).
+2. **Miniaturized Fixtures for Local CI/CD:** For external datasets (NSynth, CSGNet, ABC), ultra-lightweight canonical fixtures are stored in `tests/fixtures/` (`nsynth_mini.npz` with 50 samples, `csg_mini.json` with 50 trees, total size < 15 MB).
+3. **On-Demand Remote Streaming:** Full raw data corpora (gigabytes of 3D meshes or audio files) are mounted remotely on cloud volumes (S3 / Modal volumes) during decoupled jobs, never burdening the local developer workspace.

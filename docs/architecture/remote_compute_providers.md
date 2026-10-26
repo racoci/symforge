@@ -1,18 +1,18 @@
 # Remote Serverless GPU Providers (Modal & SageMaker) with Async Resilient Loops
 
-## 1. Visão Geral e Motivação Arquitetural
+## 1. Overview & Architectural Motivation
 
-No framework **SymForge**, a síntese de programas opera localmente em CPUs de desenvolvimento por meio de busca heurística simbólica (Beam Search, A*), avaliação analítica de DAGs e inferência prévia com modelos leves. No entanto, o treinamento de redes neurais profundas (PDE, TGC e fine-tuning de adaptadores LoRA) demanda aceleradores de hardware de alta capacidade (GPUs A10G, A100).
+In the **SymForge** framework, program synthesis executes locally on developer workstation CPUs via symbolic heuristic search (Beam Search, A*), analytical DAG evaluations, and lightweight prior model inference. However, deep neural training (PDE, TGC, and continuous LoRA adapter fine-tuning) demands GPU accelerators (A10G, A100).
 
-Para viabilizar **zero pegada de treinamento local** (*Zero Local Training Footprint*) em escala produtiva, o módulo `symforge.compute` estende a interface assíncrona `ComputeProvider` com dois provedores de computação remota:
-1. **`ModalComputeProvider`:** Integração com infraestrutura de containers *serverless* da plataforma Modal, despachando tarefas de treinamento efêmeras com tempo de subida em segundos e tarifação granular por segundo de GPU.
-2. **`SageMakerComputeProvider`:** Integração com o ecossistema corporativo AWS SageMaker e Amazon S3 para orquestração de instâncias de treino gerenciadas (`ml.g5.xlarge`, `ml.p4d.24xlarge`), com controle estrito de políticas IAM e salvaguardas de credenciais.
+To enable a production-scale **Zero Local Training Footprint**, the `symforge.compute` module extends the asynchronous `ComputeProvider` interface with two remote compute providers:
+1. **`ModalComputeProvider`:** Integrates with Modal's serverless container infrastructure, dispatching ephemeral training jobs with rapid startup times and granular per-second GPU billing.
+2. **`SageMakerComputeProvider`:** Integrates with AWS SageMaker and Amazon S3 to orchestrate enterprise managed GPU clusters (`ml.g5.xlarge`, `ml.p4d.24xlarge`), backed by strict IAM governance and credential safeguards.
 
-Ambos os provedores operam sob o motor unificado **`ResilientNetworkRunner`**, que encapsula todas as interações de rede em malhas assíncronas com **timeouts explícitos**, **backoff exponencial com jitter aleatório**, **teto rígido de iterações** e **decepação determinística de conexões** (*resource severance*).
+Both providers execute on top of the unified **`ResilientNetworkRunner`**, which wraps all network interactions in asynchronous loops featuring **explicit dual timeouts**, **exponential backoff with randomized jitter**, **hard iteration caps**, and **deterministic resource severance** in `finally` blocks.
 
 ---
 
-## 2. Arquitetura de Despacho Remoto (Remote Dispatch Architecture)
+## 2. Remote Dispatch Architecture
 
 ```text
 +---------------------------------------------------------------------------------------------------+
@@ -112,9 +112,9 @@ flowchart TD
 
 ---
 
-## 3. Mecanismo da Malha de Resiliência (Resilience Loop Mechanics)
+## 3. Resilience Loop Mechanics
 
-Toda chamada de rede assíncrona executada pelos provedores remotos passa pelo método `execute` do `ResilientNetworkRunner`. A execução obedece à máquina de estados de tolerância a falhas:
+Every remote asynchronous network call executed by cloud providers passes through the `execute` method of `ResilientNetworkRunner`:
 
 ```text
 +---------------------------------------------------------------------------------------------------+
@@ -185,44 +185,44 @@ sequenceDiagram
     end
 ```
 
-### 3.1 Classificação de Erros Transitórios vs. Não-Recuperáveis
-- **Erros Transitórios (Retryable):**
-  - Códigos HTTP: `429` (Rate Limited / Throttled), `500` (Internal Server Error), `502` (Bad Gateway), `503` (Service Unavailable), `504` (Gateway Timeout).
-  - Exceções de rede: `asyncio.TimeoutError`, `TimeoutError`, `ConnectionError`, `OSError`.
-  - Exceções AWS: `ThrottlingException`, `RequestLimitExceeded`, `ProvisionedThroughputExceededException`.
-- **Erros Fatais (Non-Retryable):**
-  - Códigos HTTP: `400` (Bad Request / Schema Inválido), `401` (Unauthorized / Token Inválido), `403` (Forbidden / Sem Cota), `404` (Not Found), `422` (Unprocessable Entity).
-  - Violações de orçamento: `max_cost_usd < 0.0`.
-  - Falhas de integridade criptográfica: divergência entre SHA-256 reportado e calculado.
+### 3.1 Transient vs. Non-Retryable Error Classification
+- **Transient (Retryable) Errors:**
+  - HTTP Status Codes: `429` (Rate Limited / Throttled), `500` (Internal Server Error), `502` (Bad Gateway), `503` (Service Unavailable), `504` (Gateway Timeout).
+  - Network Exceptions: `asyncio.TimeoutError`, `TimeoutError`, `ConnectionError`, `OSError`.
+  - AWS Exceptions: `ThrottlingException`, `RequestLimitExceeded`, `ProvisionedThroughputExceededException`.
+- **Fatal (Non-Retryable) Errors:**
+  - HTTP Status Codes: `400` (Bad Request / Schema Violation), `401` (Unauthorized / Invalid Token), `403` (Forbidden / Quota Exceeded), `404` (Not Found), `422` (Unprocessable Entity).
+  - Budget Violations: `max_cost_usd < 0.0`.
+  - Cryptographic Verification Failures: Mismatch between reported and computed SHA-256 hash.
 
 ---
 
-## 4. Formulação Matemática do Exponential Backoff com Jitter Uniforme
+## 4. Exponential Backoff with Uniform Jitter
 
-Para mitigar rajadas concorrentes e evitar o problema da debandada (*thundering herd problem*) durante picos de indisponibilidade ou *throttling* de APIs em nuvem, o atraso de espera $t_{\text{backoff}}$ entre tentativas consecutivas é regido pela fórmula matemática:
+To prevent thundering herd spikes during cloud outages, the backoff delay $t_{\text{backoff}}$ between consecutive attempts is mathematically defined as:
 
 $$t_{\text{backoff}}(\text{attempt}) = \min\left(t_{\max},\; t_{\text{base}} \cdot 2^{\text{attempt}}\right) + \text{uniform}(0, \text{jitter})$$
 
-Onde:
-- $\text{attempt} \in \{0, 1, \dots, \text{max\_retries}-1\}$ representa o índice da tentativa de retentativa (base 0).
-- $t_{\text{base}} = 0.5\text{ s}$ é o atraso base inicial.
-- $t_{\max} = 10.0\text{ s}$ é o teto máximo de espera (*backoff cap*).
-- $\text{jitter} = 0.25\text{ s}$ é a amplitude da perturbação estocástica uniformemente distribuída $\mathcal{U}(0, \text{jitter})$.
+Where:
+- $\text{attempt} \in \{0, 1, \dots, \text{max\_retries}-1\}$ represents the zero-indexed retry attempt.
+- $t_{\text{base}} = 0.5\text{ s}$ is the base delay.
+- $t_{\max} = 10.0\text{ s}$ is the backoff cap.
+- $\text{jitter} = 0.25\text{ s}$ is the stochastic perturbation spread $\mathcal{U}(0, \text{jitter})$.
 
-### 4.1 Tabela de Delays Teóricos
+### 4.1 Theoretical Delay Table
 
-| Tentativa ($a$) | Componente Exponencial ($t_{\text{base}} \cdot 2^a$) | Teto ($\min$) | Jitter $\mathcal{U}(0, 0.25)$ | Intervalo Efetivo $t_{\text{backoff}}$ |
-|:---------------:|:----------------------------------------------------:|:-------------:|:-----------------------------:|:--------------------------------------:|
-| 0 (1º Retry)    | $0.5 \cdot 2^0 = 0.50\text{ s}$                      | $0.50\text{ s}$ | $[0.00, 0.25]\text{ s}$       | $[0.50, 0.75]\text{ s}$                |
-| 1 (2º Retry)    | $0.5 \cdot 2^1 = 1.00\text{ s}$                      | $1.00\text{ s}$ | $[0.00, 0.25]\text{ s}$       | $[1.00, 1.25]\text{ s}$                |
-| 2 (3º Retry)    | $0.5 \cdot 2^2 = 2.00\text{ s}$                      | $2.00\text{ s}$ | $[0.00, 0.25]\text{ s}$       | $[2.00, 2.25]\text{ s}$                |
-| 3 (4º Retry)    | $0.5 \cdot 2^3 = 4.00\text{ s}$                      | $4.00\text{ s}$ | $[0.00, 0.25]\text{ s}$       | $[4.00, 4.25]\text{ s}$                |
-| 4 (5º Retry)    | $0.5 \cdot 2^4 = 8.00\text{ s}$                      | $8.00\text{ s}$ | $[0.00, 0.25]\text{ s}$       | $[8.00, 8.25]\text{ s}$                |
-| $\ge 5$         | $0.5 \cdot 2^a \ge 16.0\text{ s}$                    | $10.00\text{ s}$| $[0.00, 0.25]\text{ s}$       | $[10.00, 10.25]\text{ s}$              |
+| Attempt ($a$) | Exponential Component ($t_{\text{base}} \cdot 2^a$) | Cap ($\min$) | Jitter $\mathcal{U}(0, 0.25)$ | Effective Interval $t_{\text{backoff}}$ |
+|:-------------:|:----------------------------------------------------:|:------------:|:-----------------------------:|:---------------------------------------:|
+| 0 (1st Retry) | $0.5 \cdot 2^0 = 0.50\text{ s}$                      | $0.50\text{ s}$| $[0.00, 0.25]\text{ s}$       | $[0.50, 0.75]\text{ s}$                 |
+| 1 (2nd Retry) | $0.5 \cdot 2^1 = 1.00\text{ s}$                      | $1.00\text{ s}$| $[0.00, 0.25]\text{ s}$       | $[1.00, 1.25]\text{ s}$                 |
+| 2 (3rd Retry) | $0.5 \cdot 2^2 = 2.00\text{ s}$                      | $2.00\text{ s}$| $[0.00, 0.25]\text{ s}$       | $[2.00, 2.25]\text{ s}$                 |
+| 3 (4th Retry) | $0.5 \cdot 2^3 = 4.00\text{ s}$                      | $4.00\text{ s}$| $[0.00, 0.25]\text{ s}$       | $[4.00, 4.25]\text{ s}$                 |
+| 4 (5th Retry) | $0.5 \cdot 2^4 = 8.00\text{ s}$                      | $8.00\text{ s}$| $[0.00, 0.25]\text{ s}$       | $[8.00, 8.25]\text{ s}$                 |
+| $\ge 5$       | $0.5 \cdot 2^a \ge 16.0\text{ s}$                    | $10.00\text{ s}$| $[0.00, 0.25]\text{ s}$      | $[10.00, 10.25]\text{ s}$               |
 
 ---
 
-## 5. Limites Rígidos de Segurança e Salvaguardas Financeiras
+## 5. Security Guardrails & Financial Caps
 
 ```text
 +---------------------------------------------------------------------------------------------------+
@@ -273,32 +273,32 @@ graph TD
 
 ---
 
-## 6. Mapeamento de Estados e Ciclo de Vida do Job
+## 6. Status Mapping and Job Lifecycle
 
-### 6.1 Mapeamento Modal $\to$ `JobStatus`
-| Status Bruto Modal | Status Canônico SymForge (`JobStatus`) | Descrição Semântica |
-|:-------------------|:--------------------------------------:|:--------------------|
-| `"queued"`, `"pending"` | `JobStatus.PENDING` | Tarefa aguardando provisionamento de container. |
-| `"running"`, `"in_progress"` | `JobStatus.RUNNING` | Container ativo executando épocas de treino. |
-| `"completed"`, `"success"`, `"done"` | `JobStatus.COMPLETED` | Treino convergiu e artefato LoRA está pronto. |
-| `"failed"`, `"error"`, `"oom"` | `JobStatus.FAILED` | Falha de execução (OOM, erro no script). |
-| `"cancelled"`, `"stopped"` | `JobStatus.CANCELLED` | Cancelamento requisitado pelo cliente. |
+### 6.1 Modal Raw Status $\to$ `JobStatus`
+| Raw Modal Status | Canonical SymForge Status (`JobStatus`) | Semantic Description |
+|:-----------------|:---------------------------------------:|:---------------------|
+| `"queued"`, `"pending"` | `JobStatus.PENDING` | Task queued awaiting container provisioning. |
+| `"running"`, `"in_progress"` | `JobStatus.RUNNING` | Active container executing training epochs. |
+| `"completed"`, `"success"`, `"done"` | `JobStatus.COMPLETED` | Training converged; LoRA artifact ready. |
+| `"failed"`, `"error"`, `"oom"` | `JobStatus.FAILED` | Execution failed (OOM, script exception). |
+| `"cancelled"`, `"stopped"` | `JobStatus.CANCELLED` | Aborted upon client cancellation request. |
 
-### 6.2 Mapeamento AWS SageMaker $\to$ `JobStatus`
-| Status SageMaker (`TrainingJobStatus`) | Status Canônico SymForge (`JobStatus`) | Descrição Semântica |
-|:---------------------------------------|:--------------------------------------:|:--------------------|
-| `"InProgress"` | `JobStatus.RUNNING` | Job em processamento no cluster gerenciado. |
-| `"Completed"` | `JobStatus.COMPLETED` | Job finalizado com sucesso; artefatos no S3. |
-| `"Failed"` | `JobStatus.FAILED` | Treinamento falhou no contêiner SageMaker. |
-| `"Stopped"`, `"Stopping"` | `JobStatus.CANCELLED` | Job interrompido via chamada `StopTrainingJob`. |
+### 6.2 AWS SageMaker Status $\to$ `JobStatus`
+| SageMaker Status (`TrainingJobStatus`) | Canonical SymForge Status (`JobStatus`) | Semantic Description |
+|:--------------------------------------|:---------------------------------------:|:---------------------|
+| `"InProgress"` | `JobStatus.RUNNING` | Job training on managed GPU cluster. |
+| `"Completed"` | `JobStatus.COMPLETED` | Job successfully finished; artifacts stored in S3. |
+| `"Failed"` | `JobStatus.FAILED` | Training script error or instance failure. |
+| `"Stopped"`, `"Stopping"` | `JobStatus.CANCELLED` | Job aborted via `StopTrainingJob`. |
 
 ---
 
-## 7. Verificação de Integridade Criptográfica dos Pesos LoRA
+## 7. Cryptographic Integrity Verification of LoRA Weights
 
-Para prevenir que conexões truncadas ou transferências corrompidas injetem tensores inválidos no motor de inferência local:
-1. O download do artefato (via HTTP Base64 da API Modal ou S3 GetObject do SageMaker) calcula o hash canônico SHA-256 de 64 caracteres hexadecimais:
+To prevent truncated downloads or corrupted weights from being ingested into local inference memory:
+1. Upon artifact retrieval (via Modal Base64 HTTP response or SageMaker S3 GetObject), the download runner computes the canonical SHA-256 hash:
    $$\text{checksum} = \text{SHA256}(\text{weights\_bytes})$$
-2. Se o provedor reportar um hash prévio (`weights_checksum`), o sistema realiza uma verificação simétrica exata:
+2. The runner verifies identity against the reported checksum:
    $$\text{reported\_checksum.lower}() == \text{calculated\_checksum}$$
-3. Caso haja divergência, uma exceção `ArtifactRetrievalError` é imediatamente disparada, o arquivo corrompido é removido e os recursos de rede são decepados.
+3. Any mismatch triggers an immediate `ArtifactRetrievalError`, discards the corrupt file, and severs transport handles.

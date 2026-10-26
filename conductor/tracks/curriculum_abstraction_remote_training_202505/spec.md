@@ -89,90 +89,90 @@ graph TD
 
 ```text
 +---------------------------------------------------------------------------------------------------+
-|                              MAPA DE ISOMORFISMO: ÁUDIO vs. SDF                                   |
+|                              ISOMORPHISM MATRIX: AUDIO vs. SDF                                    |
 |                                                                                                   |
-|  Conceito                 Sintetizador de Áudio (1D DSP)         Sintetizador de SDF (3D CSG)     |
+|  Concept                  Audio Synthesizer (1D DSP)             SDF Synthesizer (3D CSG)         |
 |  -----------------------  -------------------------------------  -------------------------------- |
-|  Entrada Espacial         t in R (Tempo)                         p = (x,y,z) in R^3 (Posição)     |
-|  Saída Contínua           s(t) in [-1, 1] (Pressão Acústica)     d(p) in R (Distância à Superf.)  |
-|  Operação Booleana/Mix    Mix(s1, s2, w) / RingMod(s1, s2)       Union / SmoothUnion(d1, d2, k)   |
-|  Transformação de Domínio Shift Temporal / Pitch Shift           Translação / Rotação / Escala    |
-|  Extrator Perceptual      Multi-scale STFT / Mel Filterbanks     Surface Sampling / Raymarching   |
-|  Espaço de Contraste      Latente Espectral (Audio Latent)       Latente Geométrico (Shape Latent)|
+|  Spatial/Domain Input     t in R (Continuous Time)               p = (x,y,z) in R^3 (Coordinates) |
+|  Continuous Output        s(t) in [-1, 1] (Acoustic Pressure)    d(p) in R (Signed Distance)      |
+|  Composition / Boolean    Mix(s1, s2, w) / RingMod(s1, s2)       Union / SmoothUnion(d1, d2, k)   |
+|  Domain Transform         Time Shift / Pitch Modulation          Translation / Rotation / Scale   |
+|  Perceptual Extractor     Multi-scale STFT / Mel Filterbanks     Surface Probing / Raymarching    |
+|  Latent Contrast Space    Acoustic Latent z_audio                Geometric Latent z_sdf           |
 +---------------------------------------------------------------------------------------------------+
 ```
 
 ```mermaid
 graph LR
-    subgraph AudioDomain [Pilar 1: Sintetizador de Áudio]
-        A_IN[Tempo: t] --> A_PROG[DAG de DSP: Osc, Filter, Env]
-        A_PROG --> A_OUT[Sinal s_t]
+    subgraph AudioDomain [Pillar 1: Audio Synthesizer]
+        A_IN[Time: t] --> A_PROG[DSP DAG: Osc, Filter, Env]
+        A_PROG --> A_OUT[Signal s_t]
         A_OUT --> A_SPEC[Multi-scale STFT]
-        A_SPEC --> A_LAT[Latente Acústico z_audio]
+        A_SPEC --> A_LAT[Acoustic Latent z_audio]
     end
 
-    subgraph SDFDomain [Pilar 2: Sintetizador de SDFs]
-        S_IN[Posição: x, y, z] --> S_PROG[DAG de CSG: Sphere, Box, Union]
-        S_PROG --> S_OUT[Campo d_p]
-        S_OUT --> S_REND[Amostragem de Superfície]
-        S_REND --> S_LAT[Latente Geométrico z_sdf]
+    subgraph SDFDomain [Pillar 2: SDF Synthesizer]
+        S_IN[Position: x, y, z] --> S_PROG[CSG DAG: Sphere, Box, Union]
+        S_PROG --> S_OUT[Field d_p]
+        S_OUT --> S_REND[Surface Probing & Normals]
+        S_REND --> S_LAT[Geometric Latent z_sdf]
     end
 
-    A_LAT --> LOSS_UNI[Perda Contrastiva Perceptual InfoNCE]
+    A_LAT --> LOSS_UNI[Differentiable Contrastive InfoNCE Loss]
     S_LAT --> LOSS_UNI
 ```
 
-### 2.1 Pilar 1: Sintetizador de Áudio (DSP Procedural 1D)
-- **Representação:** Grafo computacional acíclico (DAG) mapeando tempo discreto $t \in [0, T]$ para sinal de áudio $s(t) \in [-1, 1]$.
-- **Primitivas Conhecidas:**
-  - *Fontes Sonoras:* `Sine(freq, phase)`, `Saw(freq)`, `Square(freq, pulse_width)`, `Noise(seed)`.
-  - *Envelopes & Moduladores:* `ADSR(attack, decay, sustain, release)`, `ExpDecay(half_life)`, `LFO(freq, waveform)`, `FM(carrier, modulator, depth)`.
-  - *Filtros & Misturas:* `LowPass(cutoff, resonance)`, `HighPass(cutoff, resonance)`, `Gain(amplitude)`, `Mix(sig1, sig2, ratio)`.
-- **Perda Perceptual de Contraste:** Extrai características de magnitude espectral via STFT em múltiplas resoluções temporais (ex: 512, 1024, 2048 samples) e calcula distância contrastiva InfoNCE contra ruídos e distratores harmônicos.
+### 2.1 Pillar 1: Audio Synthesizer (1D Procedural DSP)
+- **Representation:** Directed acyclic computational graph (DAG) mapping discrete time $t \in [0, T]$ to audio signal $s(t) \in [-1, 1]$.
+- **Known Primitives:**
+  - *Sound Sources:* `Sine(freq, phase)`, `Saw(freq)`, `Square(freq, pulse_width)`, `Noise(seed)`.
+  - *Envelopes & Modulators:* `ADSR(attack, decay, sustain, release)`, `ExpDecay(half_life)`, `LFO(freq, waveform)`, `FM(carrier, modulator, depth)`.
+  - *Filters & Combinators:* `LowPass(cutoff, resonance)`, `HighPass(cutoff, resonance)`, `Gain(amplitude)`, `Mix(sig1, sig2, ratio)`.
+- **Contrastive Perceptual Loss:** Multi-scale Short-Time Fourier Transform (STFT) log-magnitude feature extractor projected into an acoustic embedding space with InfoNCE contrastive separation against negative distractors.
 
-### 2.2 Pilar 2: Sintetizador de SDFs (Geometria Implícita 3D)
-- **Representação:** Grafo computacional acíclico (DAG) mapeando coordenadas espaciais $\mathbf{p} \in \mathbb{R}^3$ para distância com sinal $d(\mathbf{p}) \in \mathbb{R}$.
-- **Primitivas Conhecidas:**
-  - *Formas Analíticas:* `Sphere(radius)`, `Box(half_extents)`, `Cylinder(radius, height)`, `Torus(r_major, r_minor)`, `Plane(normal, offset)`.
-  - *Transformações Afins:* `Translate(sdf, offset)`, `Rotate(sdf, angles)`, `Scale(sdf, factor)`.
-  - *Operadores Booleanos & Suavização:* `Union(sdf1, sdf2)`, `Difference(sdf1, sdf2)`, `Intersection(sdf1, sdf2)`, `SmoothUnion(sdf1, sdf2, k)`.
-- **Perda Perceptual de Contraste:** Amostragem estratificada na isosuperfície ($\varepsilon$-boundary) e silhuetas renderizadas por raymarching com contraste InfoNCE contra formas geometricamente dissimilares.
+### 2.2 Pillar 2: SDF Synthesizer (3D Implicit Geometry)
+- **Representation:** Directed acyclic computational graph (DAG) mapping spatial coordinates $\mathbf{p} \in \mathbb{R}^3$ to signed distance $d(\mathbf{p}) \in \mathbb{R}$.
+- **Known Primitives:**
+  - *Analytical Shapes:* `Sphere(radius)`, `Box(half_extents)`, `Cylinder(radius, height)`, `Torus(r_major, r_minor)`, `Plane(normal, offset)`.
+  - *Affine Transforms:* `Translate(sdf, offset)`, `Rotate(sdf, angles)`, `Scale(sdf, factor)`.
+  - *Boolean Operators & Blends:* `Union(sdf1, sdf2)`, `Difference(sdf1, sdf2)`, `Intersection(sdf1, sdf2)`, `SmoothUnion(sdf1, sdf2, k)`.
+- **Contrastive Perceptual Loss:** Stratified surface point probing near the zero-level set ($\varepsilon$-boundary) and raymarching silhouettes evaluated against geometric distractors.
 
-### 2.3 Pilar 3: Generalização (Universal Neurosymbolic Core)
-- **Gramática Tipada e Hole Expansion:** Expansão progressiva de buracos tipados `Hole[T]` em ASTs com conversão canônica para DAGs (deduplicação de subexpressões puras).
-- **Gerador Procedural por PCFG:** Amostragem dirigida por regras probabilísticas com restrições contextuais (impedindo clipping em áudio e interseções vazias em SDFs).
-- **Descoberta de Abstrações (DreamCoder):** Identificação de subgrafos isomórficos por anti-unificação e compressão por Descrição Mínima (MDL), promovendo-os a novas produções na gramática.
-- **Treinamento Desacoplado:** Protocolo assíncrono para delegar ajuste contínuo e PEFT/LoRA para provedores remotos, mantendo zero consumo de GPU local.
+### 2.3 Pillar 3: Generalization (Universal Neurosymbolic Core)
+- **Typed Grammar & Hole Expansion:** Incremental expansion of typed holes `Hole[T]` in ASTs with canonical conversion to DAGs (Common Subexpression Elimination).
+- **Procedural PCFG Task Generator:** Rule-based stochastic sampling with context-sensitive physical stability constraints (preventing digital audio clipping and disjoint empty booleans).
+- **Abstraction Discovery (DreamCoder):** Syntactic anti-unification (LGG) and Minimum Description Length (MDL) compression promoting recurrent subgraphs into first-class macros.
+- **Decoupled Asynchronous Training:** Asynchronous protocol delegating continuous parameter optimization and PEFT/LoRA fine-tuning to remote providers, maintaining zero local GPU consumption.
 
 ---
 
-## 3. Formulação Matemática da Perda Contrastiva e PCFG
+## 3. Mathematical Formulation of Contrastive Loss & PCFG
 
-### 3.1 Gerador de Dados Sintéticos via PCFG com Contexto
-Dado um conjunto de símbolos não-terminais $V$, terminais $\Sigma$, regras de produção $R$ e símbolo inicial $S$, a Probabilistic Context-Free Grammar com Restrições Contextuais define:
+### 3.1 Context-Sensitive PCFG Task Generator
+Given nonterminals $V$, terminals $\Sigma$, production rules $R$, and start symbol $S$, the Context-Sensitive Probabilistic Grammar defines:
 
 $$\mathbb{P}(A \to \alpha \mid \text{context}) = \frac{\exp(\mathbf{w}_{A \to \alpha} \cdot \mathbf{\phi}(\text{context}))}{\sum_{\beta \in \text{Valid}(A, \text{context})} \exp(\mathbf{w}_{A \to \beta} \cdot \mathbf{\phi}(\text{context}))}$$
 
-Onde $\text{Valid}(A, \text{context})$ aplica filtros de estabilidade do domínio:
-- Em áudio: Filtros com pólos estáveis ($|z| < 1$), ganho global normalizado ($|s(t)| \le 1.0$).
-- Em SDFs: Bounding boxes sobrepostas para operadores booleanos (evitando nós mortos).
+Where $\text{Valid}(A, \text{context})$ enforces domain stability invariants:
+- In Audio: Stable filter poles ($|z| < 1$), normalized gain ($|s(t)| \le 1.0$).
+- In SDF: Overlapping bounding boxes for boolean operators (preventing dead nodes).
 
-### 3.2 Perda Contrastiva Perceptual InfoNCE
-Para qualquer programa candidato $(G, \theta)$ que gera função $\hat{f}$ e alvo $f^*$:
-1. O extrator perceptual diferenciável $\Phi(\cdot)$ computa o vetor latente normalizado $\mathbf{z}_{\hat{f}} = \Phi(\hat{f}) / \|\Phi(\hat{f})\|_2$.
-2. O objetivo contrastivo contra $K$ programas negativos $\{f^-_j\}_{j=1}^K$ com temperatura $\tau$ é dado por:
+### 3.2 Differentiable Contrastive Perceptual Loss (InfoNCE)
+For any candidate program $(G, \theta)$ generating function $\hat{f}$ and reference target $f^*$:
+1. A differentiable feature extractor $\Phi(\cdot)$ computes normalized latent vector $\mathbf{z}_{\hat{f}} = \Phi(\hat{f}) / \|\Phi(\hat{f})\|_2$.
+2. The InfoNCE contrastive objective against $K$ negative programs $\{f^-_j\}_{j=1}^K$ with temperature $\tau$ is:
 
 $$\mathcal{L}_{\text{contrast}}(\hat{f}, f^*, \{f^-_j\}) = -\log \frac{\exp\left(\frac{\mathbf{z}_{\hat{f}} \cdot \mathbf{z}_{f^*}}{\tau}\right)}{\exp\left(\frac{\mathbf{z}_{\hat{f}} \cdot \mathbf{z}_{f^*}}{\tau}\right) + \sum_{j=1}^{K} \exp\left(\frac{\mathbf{z}_{\hat{f}} \cdot \mathbf{z}_{f^-_j}}{\tau}\right)}$$
 
-3. A perda global incorpora o modelo de custo computacional de hardware compilado $C_H(G)$:
+3. The overall multi-objective loss incorporates the compiled hardware cost model $C_H(G)$:
 
 $$\mathcal{J}(G, \theta) = \lambda_{\text{contrast}} \mathcal{L}_{\text{contrast}} + \lambda_{\text{rec}} \mathcal{L}_{\text{rec}}(\hat{f}, f^*) + \lambda_{\text{cost}} C_H(G)$$
 
 ---
 
-## 4. Subprocessos e Interfaces do Sistema
+## 4. Subsystems and Interfaces
 
-### 4.1 Protocolo do Provedor de Computação Desacoplada
+### 4.1 Decoupled ComputeProvider Protocol
 ```python
 class ComputeProvider(Protocol):
     async def submit_training_job(
@@ -198,21 +198,21 @@ class ComputeProvider(Protocol):
     ) -> bool: ...
 ```
 
-Provedores concretos suportados:
-1. `MockComputeProvider`: Execução em < 10ms local, zero custo, ideal para testes TDD e CI/CD.
-2. `ModalComputeProvider`: Serverless GPU sob demanda (NVIDIA A10G/T4).
-3. `SageMakerComputeProvider`: Treinamento corporativo AWS SageMaker com persistência em S3.
+Supported concrete providers:
+1. `MockComputeProvider`: Local in-memory execution in < 10ms, $0.00 USD, for TDD test suites and CI/CD.
+2. `ModalComputeProvider`: On-demand serverless GPU containers (NVIDIA A10G/T4).
+3. `SageMakerComputeProvider`: Managed enterprise AWS SageMaker training clusters with S3 artifact storage.
 
-### 4.2 Descoberta de Abstrações via Anti-Unificação & MDL
-- **Anti-unificação:** Determina o Generalizador Menos Geral (LGG) entre soluções que atingiram limiar de perda perceptual.
-- **Métrica de Descrição Mínima (MDL):**
+### 4.2 Abstraction Discovery via Anti-Unification & MDL
+- **Anti-Unification:** Computes the Least General Generalization (LGG) across solved programs that satisfy the perceptual loss threshold.
+- **Minimum Description Length (MDL) Metric:**
 $$\Delta \text{MDL}(\alpha) = \text{Size}(\alpha) - \sum_{p \in \mathcal{D}_{\text{solved}}} (\text{Size}(p) - \text{Size}(p[\alpha])) < 0$$
-- Abstrações aceitas são registradas na gramática tipada com novas probabilidades PCFG e assinaturas formais.
+- Approved abstractions are registered into the typed grammar with updated PCFG prior distributions and formal signatures.
 
 ---
 
-## 5. Diretrizes de Qualidade e Critérios de Aceite
+## 5. Quality Standards and Acceptance Criteria
 
-1. **Test-Driven Development (TDD):** Cobertura de testes unitários $\ge 80\%$, cobrindo nós do AST, canonicalização de DAGs, gerador PCFG, perda contrastiva e provedores remotos.
-2. **Isolamento de Recursos:** Nenhum processo de treinamento pesado bloqueia a CPU local; execução sob limites estritos de memória e timeouts explícitos em todas as chamadas assíncronas.
-3. **Validação Simétrica:** Serialização e desserialização de programas preservam $f(x) \equiv f^{-1}(f(x))$.
+1. **Test-Driven Development (TDD):** Automated unit and integration test coverage $\ge 80\%$, validating AST nodes, canonical DAGs, PCFG generators, contrastive losses, and remote providers.
+2. **Resource Isolation:** Zero heavy training runs locally; execution bounded by strict memory limits and explicit timeouts on all asynchronous calls.
+3. **Symmetrical Validation:** Program serialization and deserialization strictly preserve identity: $f^{-1}(f(x)) \equiv x$.
