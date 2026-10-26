@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LeanEditor, type LeanSelection } from './components/editor/LeanEditor';
 
 export interface AppProps {
   initialDomain?: 'sdf' | 'audio' | 'plotter' | 'hardware';
@@ -7,15 +8,16 @@ export interface AppProps {
 export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
   const [activeDomain, setActiveDomain] = useState<'sdf' | 'audio' | 'plotter' | 'hardware'>(initialDomain);
   const [variationCount, setVariationCount] = useState<number>(0);
+  const [currentSelection, setCurrentSelection] = useState<LeanSelection | null>(null);
 
-  const sampleLeanCode = `import SymforgeIr.Types
+  const [leanCode, setLeanCode] = useState<string>(`import SymforgeIr.Types
 
 def myGyroidSDF : SDFNode :=
   SDFNode.intersection
     (SDFNode.sphere (FreeParam.mk "radius" 1.25 0.5 3.0))
     (SDFNode.gyroid
       (FreeParam.mk "scale" 3.14 1.0 10.0)
-      (FreeParam.mk "thickness" 0.08 0.01 0.5))`;
+      (FreeParam.mk "thickness" 0.08 0.01 0.5))`);
 
   const handleGenerateVariations = () => {
     setVariationCount((prev) => prev + 1);
@@ -52,12 +54,31 @@ def myGyroidSDF : SDFNode :=
         <section className="editor-panel" aria-label="Lean 4 Editor Panel">
           <div className="panel-header">
             <span>Editor: SymforgeIr/Gyroid.lean</span>
-            <span style={{ color: 'var(--accent-cyan)' }}>Lean 4</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {currentSelection && currentSelection.selectedText.length > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--accent-cyan)',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    backgroundColor: 'var(--bg-surface)',
+                  }}
+                  data-testid="editor-selection-indicator"
+                >
+                  L{currentSelection.startLine}:{currentSelection.startCol}-L{currentSelection.endLine}:{currentSelection.endCol} ({currentSelection.selectedText.length}c)
+                </span>
+              )}
+              <span style={{ color: 'var(--accent-cyan)' }}>Lean 4</span>
+            </div>
           </div>
           <div className="panel-body">
-            <pre className="code-placeholder" data-testid="lean-code-editor">
-              <code>{sampleLeanCode}</code>
-            </pre>
+            <LeanEditor
+              value={leanCode}
+              onChange={setLeanCode}
+              onSelectionChange={setCurrentSelection}
+              dataTestId="lean-code-editor"
+            />
           </div>
         </section>
 

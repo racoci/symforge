@@ -91,7 +91,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/web_ide_scaffolding.md`
   - **Pass-to-Complete Gate:** Build outputs clean production bundles into `packages/web/dist/` in $< 5$ seconds.
 
-- [ ] Task 1.2: Monaco Editor Integration with Lean 4 Monarch Tokenizer & Language Configuration
+- [x] Task 1.2: Monaco Editor Integration with Lean 4 Monarch Tokenizer & Language Configuration
   - **Objective:** Configure Monaco Editor with custom Monarch tokenizer for Lean 4 syntax (`def`, `inductive`, `structure`, `deriving`, `import`, attributes), unicode mathematical operators (`→`, `∀`, `∃`, `λ`, `⟦`, `⟧`, `⟨`, `⟩`), and comment folding rules.
   - **Bottleneck Mitigation:** Pure client-side tokenizer configuration; no external language server process required for syntax highlighting and token identification.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/editor/leanTokenizer.test.ts`
