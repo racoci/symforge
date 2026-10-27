@@ -479,7 +479,14 @@ function parseSDFConstructor(state: ParserState, base: string, startSpan: Source
     }
     default: {
       const macroName = base;
-      node = createSDFMacro(macroName, {});
+      const args: Record<string, any> = {};
+      let argIdx = 0;
+      while (!match(state, 'Delimiter', ')') && !match(state, 'EOF') && !match(state, 'Keyword')) {
+        const arg = parseExpressionOrParam(state);
+        const argKey = isFreeParam(arg) ? arg.id : `arg_${argIdx++}`;
+        args[argKey] = arg;
+      }
+      node = createSDFMacro(macroName, args);
       break;
     }
   }
@@ -566,7 +573,15 @@ function parseAudioConstructor(state: ParserState, base: string, startSpan: Sour
       break;
     }
     default: {
-      node = createAudioMacro(base, {});
+      const macroName = base;
+      const args: Record<string, any> = {};
+      let argIdx = 0;
+      while (!match(state, 'Delimiter', ')') && !match(state, 'EOF') && !match(state, 'Keyword')) {
+        const arg = parseExpressionOrParam(state);
+        const argKey = isFreeParam(arg) ? arg.id : `arg_${argIdx++}`;
+        args[argKey] = arg;
+      }
+      node = createAudioMacro(macroName, args);
       break;
     }
   }

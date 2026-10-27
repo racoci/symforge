@@ -62,4 +62,26 @@ describe('SymForge Web IDE App Shell', () => {
     expect(screen.getByText(/Lean 4 Engine: Ready/i)).toBeInTheDocument();
     expect(screen.getByText(/Active Domain: SDF/i)).toBeInTheDocument();
   });
+
+  it('renders ParameterInspector and allows collapsing and expanding', () => {
+    render(<App />);
+    expect(screen.getByTestId('parameter-inspector')).toBeInTheDocument();
+    expect(screen.getByTestId('toggle-inspector-btn')).toBeInTheDocument();
+
+    // Click toggle button to collapse inspector
+    fireEvent.click(screen.getByTestId('toggle-inspector-btn'));
+    expect(screen.getByTestId('parameter-inspector-collapsed')).toBeInTheDocument();
+
+    // Click expand button to restore inspector
+    fireEvent.click(screen.getByTestId('expand-inspector-btn'));
+    expect(screen.getByTestId('parameter-inspector')).toBeInTheDocument();
+  });
+
+  it('synchronizes AST and parameters on AST sync button click', () => {
+    render(<App />);
+    const syncBtn = screen.getByTestId('ast-sync-btn');
+    expect(syncBtn).toBeInTheDocument();
+    fireEvent.click(syncBtn);
+    expect(screen.getByTestId('param-count-badge')).toBeInTheDocument();
+  });
 });

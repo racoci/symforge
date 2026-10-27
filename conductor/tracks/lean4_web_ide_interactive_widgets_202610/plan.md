@@ -115,7 +115,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/lean4_ast_parser.md`
   - **Pass-to-Complete Gate:** Parses 50 canonical Audio and SDF Lean 4 program samples with zero syntax errors.
 
-- [ ] Task 1.5: FreeParam Reactive State Store & Parameter Inspector
+- [x] Task 1.5: FreeParam Reactive State Store & Parameter Inspector
   - **Objective:** Build the Zustand reactive state store extracting all `FreeParam` instances from the active AST, providing an interactive UI inspector panel for continuous parameter adjustments with immediate state notification.
   - **Bottleneck Mitigation:** Decouples parameter mutations from AST structural updates to avoid redundant re-renders.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/store/freeParamStore.test.ts`

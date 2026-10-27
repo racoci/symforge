@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LeanEditor, type LeanSelection } from './components/editor/LeanEditor';
+import { ParameterInspector } from './components/inspector/ParameterInspector';
+import { useFreeParamStore } from './core/store/freeParamStore';
+import { parseLeanCode } from './core/parser/leanParser';
+import { getNodeCount } from './core/ast/models';
 
 export interface AppProps {
   initialDomain?: 'sdf' | 'audio' | 'plotter' | 'hardware';
@@ -9,6 +13,7 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
   const [activeDomain, setActiveDomain] = useState<'sdf' | 'audio' | 'plotter' | 'hardware'>(initialDomain);
   const [variationCount, setVariationCount] = useState<number>(0);
   const [currentSelection, setCurrentSelection] = useState<LeanSelection | null>(null);
+  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState<boolean>(false);
 
   const [leanCode, setLeanCode] = useState<string>(`import SymforgeIr.Types
 
@@ -19,8 +24,44 @@ def myGyroidSDF : SDFNode :=
       (FreeParam.mk "scale" 3.14 1.0 10.0)
       (FreeParam.mk "thickness" 0.08 0.01 0.5))`);
 
+  // Synchronize AST to FreeParam Reactive State Store on code change
+  useEffect(() => {
+    try {
+      const result = parseLeanCode(leanCode);
+      if (result.errors.length === 0) {
+        useFreeParamStore.getState().setAST(result.ast, result.declarationName, result.domainType);
+      } else if (result.ast) {
+        useFreeParamStore.getState().setAST(result.ast, result.declarationName, result.domainType);
+      }
+    } catch (err) {
+      console.error('[SymForge App] Transient parse error while synchronizing AST:', {
+        error: err,
+        codeLength: leanCode.length,
+        timestamp: Date.now(),
+      });
+    }
+  }, [leanCode]);
+
+  const ast = useFreeParamStore((state) => state.ast);
+  const paramOrder = useFreeParamStore((state) => state.paramOrder);
+  const nodeCount = useMemo(() => (ast ? getNodeCount(ast) : 0), [ast]);
+  const paramCount = paramOrder.length;
+
   const handleGenerateVariations = () => {
     setVariationCount((prev) => prev + 1);
+  };
+
+  const handleSyncAST = () => {
+    try {
+      const result = parseLeanCode(leanCode);
+      useFreeParamStore.getState().setAST(result.ast, result.declarationName, result.domainType);
+    } catch (err) {
+      console.error('[SymForge App] Manual AST Sync failed with context:', {
+        error: err,
+        codeLength: leanCode.length,
+        timestamp: Date.now(),
+      });
+    }
   };
 
   return (
@@ -42,8 +83,24 @@ def myGyroidSDF : SDFNode :=
             <span>✨ Scoped Variation</span>
             {variationCount > 0 && <span className="badge">({variationCount})</span>}
           </button>
-          <button type="button" className="btn" data-testid="ast-sync-btn">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleSyncAST}
+            data-testid="ast-sync-btn"
+            title="Force AST Synchronization"
+          >
             🔄 AST Sync
+          </button>
+          <button
+            type="button"
+            className={`btn ${!isInspectorCollapsed ? 'btn-primary' : ''}`}
+            onClick={() => setIsInspectorCollapsed(!isInspectorCollapsed)}
+            data-testid="toggle-inspector-btn"
+            title="Toggle Parameter Inspector Drawer"
+          >
+            <span>🎚️ Parameters</span>
+            {paramCount > 0 && <span className="badge">({paramCount})</span>}
           </button>
         </div>
       </header>
@@ -82,7 +139,7 @@ def myGyroidSDF : SDFNode :=
           </div>
         </section>
 
-        {/* Right: Interactive Domain Viewport Shell */}
+        {/* Center: Interactive Domain Viewport Shell */}
         <section className="viewport-panel" aria-label="Domain Viewport Panel">
           <div className="panel-header">
             <span>Viewport: Interactive Domain Widget</span>
@@ -141,6 +198,13 @@ def myGyroidSDF : SDFNode :=
             </div>
           </div>
         </section>
+
+        {/* Right: Parameter Inspector Drawer */}
+        <ParameterInspector
+          isCollapsed={isInspectorCollapsed}
+          onToggleCollapse={() => setIsInspectorCollapsed(!isInspectorCollapsed)}
+          dataTestId="parameter-inspector"
+        />
       </main>
 
       {/* Bottom Status Bar */}
@@ -151,10 +215,10 @@ def myGyroidSDF : SDFNode :=
             <span>Lean 4 Engine: Ready (Client-Side)</span>
           </div>
           <div className="status-item">
-            <span>AST Nodes: 3</span>
+            <span>AST Nodes: {nodeCount}</span>
           </div>
           <div className="status-item">
-            <span>FreeParams: 3</span>
+            <span>FreeParams: {paramCount}</span>
           </div>
         </div>
         <div className="status-right">
