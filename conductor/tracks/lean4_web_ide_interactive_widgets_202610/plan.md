@@ -131,7 +131,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
 
 Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewports: 3D WebGL Raymarching widget for `SDFNode` with real-time `FreeParam` sliders, WebAudio DSP synthesis and FFT spectrogram widget for `AudioNode`, and Generalized Hyperdimensional Function Plotter for arbitrary $f: \mathbb{R}^n \to \mathbb{R}^m$ along with hardware execution timelines.
 
-- [ ] Task 2.1: Domain Widget Registry & Extensible Viewport Shell
+- [x] Task 2.1: Domain Widget Registry & Extensible Viewport Shell
   - **Objective:** Create the `DomainWidgetRegistry` interface and top-level responsive layout shell that dynamically inspects AST return types (`SDFNode`, `AudioNode`, `HardwareNode`, $f: \mathbb{R}^n \to \mathbb{R}^m$) and mounts the appropriate visual widget.
   - **Bottleneck Mitigation:** Pluggable React component architecture allowing seamless addition of future domain visualizers.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/widgetRegistry.test.ts`

@@ -503,6 +503,11 @@ export function collectFreeParams(node: ASTNode): FreeParam[] {
 }
 
 /**
+ * Alias for collectFreeParams for backward/symmetrical compatibility.
+ */
+export const extractFreeParams = collectFreeParams;
+
+/**
  * Calculates 1-indexed maximum tree depth.
  */
 export function getTreeDepth(node: ASTNode): number {

@@ -660,3 +660,245 @@ html, body {
   font-family: var(--font-mono);
   color: var(--accent-cyan);
 }
+
+/* ==========================================
+   Viewport Shell & Extensible Widget Styles
+   ========================================== */
+
+.viewport-panel-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+.viewport-shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.widget-select-dropdown:focus {
+  border-color: var(--accent-cyan) !important;
+}
+
+/* Error Boundary */
+.widget-error-card {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.15) !important;
+}
+
+.error-message-box {
+  background-color: var(--bg-primary);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  text-align: left;
+  max-width: 100%;
+  word-break: break-all;
+}
+
+.error-name {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.error-msg {
+  color: var(--text-secondary);
+}
+
+/* Generic AST Tree Viewport */
+.generic-ast-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+}
+
+.ast-tree-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
+}
+
+.ast-tree-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.ast-toolbar-title {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ast-toolbar-decl {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.ast-toolbar-badge {
+  font-size: 0.625rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background-color: rgba(56, 189, 248, 0.15);
+  color: var(--accent-cyan);
+  font-weight: 600;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  text-transform: uppercase;
+}
+
+.ast-tree-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-sm {
+  padding: 3px 8px !important;
+  font-size: 0.75rem !important;
+}
+
+.ast-tree-content {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.ast-tree-row-wrapper {
+  margin-bottom: 2px;
+}
+
+.ast-tree-node-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.ast-tree-node-row:hover {
+  background-color: var(--bg-surface);
+}
+
+.ast-expand-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.ast-expand-btn:hover {
+  color: var(--text-primary);
+}
+
+.ast-leaf-spacer {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  width: 14px;
+  text-align: center;
+  user-select: none;
+}
+
+.ast-node-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ast-kind-badge {
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background-color: var(--bg-surface);
+  border: 1px solid currentColor;
+}
+
+.ast-domain-tag {
+  font-size: 0.5625rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ast-child-count {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.ast-node-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+.ast-field-param-row,
+.ast-field-primitive-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6875rem;
+}
+
+.ast-field-key {
+  color: var(--text-muted);
+}
+
+.ast-param-id {
+  color: var(--accent-indigo);
+  font-weight: 600;
+}
+
+.ast-param-range {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+}
+
+.ast-mini-slider {
+  width: 90px;
+  height: 3px;
+  accent-color: var(--accent-cyan);
+  cursor: pointer;
+}
+
+.ast-param-val {
+  color: var(--accent-cyan);
+  min-width: 28px;
+  text-align: right;
+}
+
+.ast-field-val {
+  color: var(--text-secondary);
+}
+
+.ast-children-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.ast-node-capped {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}

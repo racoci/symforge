@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LeanEditor, type LeanSelection } from './components/editor/LeanEditor';
 import { ParameterInspector } from './components/inspector/ParameterInspector';
+import { ViewportShell } from './components/widgets';
 import { useFreeParamStore } from './core/store/freeParamStore';
 import { parseLeanCode } from './core/parser/leanParser';
 import { getNodeCount } from './core/ast/models';
@@ -9,20 +10,47 @@ export interface AppProps {
   initialDomain?: 'sdf' | 'audio' | 'plotter' | 'hardware';
 }
 
-export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
-  const [activeDomain, setActiveDomain] = useState<'sdf' | 'audio' | 'plotter' | 'hardware'>(initialDomain);
-  const [variationCount, setVariationCount] = useState<number>(0);
-  const [currentSelection, setCurrentSelection] = useState<LeanSelection | null>(null);
-  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState<boolean>(false);
-
-  const [leanCode, setLeanCode] = useState<string>(`import SymforgeIr.Types
+const DOMAIN_PRESETS: Record<'sdf' | 'audio' | 'plotter' | 'hardware', string> = {
+  sdf: `import SymforgeIr.Types
 
 def myGyroidSDF : SDFNode :=
   SDFNode.intersection
     (SDFNode.sphere (FreeParam.mk "radius" 1.25 0.5 3.0))
     (SDFNode.gyroid
       (FreeParam.mk "scale" 3.14 1.0 10.0)
-      (FreeParam.mk "thickness" 0.08 0.01 0.5))`);
+      (FreeParam.mk "thickness" 0.08 0.01 0.5))`,
+
+  audio: `import SymforgeIr.Types
+
+def mySynthAudio : AudioNode :=
+  AudioNode.lowpass
+    (FreeParam.mk "cutoff" 880.0 20.0 20000.0)
+    (FreeParam.mk "resonance" 1.414 0.1 10.0)
+    (AudioNode.sine
+      (FreeParam.mk "freq" 440.0 20.0 5000.0)
+      (FreeParam.mk "phase" 0.0 0.0 6.28))`,
+
+  plotter: `import SymforgeIr.Types
+
+def myHyperdimFunc : UniversalNode :=
+  UniversalNode.universal_sdf
+    (SDFNode.sphere (FreeParam.mk "radius" 2.0 0.1 5.0))`,
+
+  hardware: `import SymforgeIr.Types
+
+def myAddPipeline : HardwareNode :=
+  HardwareNode.add
+    (HardwareNode.reg "r0")
+    (HardwareNode.imm 42)`,
+};
+
+export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
+  const [activeDomain, setActiveDomain] = useState<'sdf' | 'audio' | 'plotter' | 'hardware'>(initialDomain);
+  const [variationCount, setVariationCount] = useState<number>(0);
+  const [currentSelection, setCurrentSelection] = useState<LeanSelection | null>(null);
+  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState<boolean>(false);
+
+  const [leanCode, setLeanCode] = useState<string>(DOMAIN_PRESETS[initialDomain] || DOMAIN_PRESETS.sdf);
 
   // Synchronize AST to FreeParam Reactive State Store on code change
   useEffect(() => {
@@ -49,6 +77,14 @@ def myGyroidSDF : SDFNode :=
 
   const handleGenerateVariations = () => {
     setVariationCount((prev) => prev + 1);
+  };
+
+  const handleDomainTabClick = (domain: 'sdf' | 'audio' | 'plotter' | 'hardware') => {
+    setActiveDomain(domain);
+    const preset = DOMAIN_PRESETS[domain];
+    if (preset) {
+      setLeanCode(preset);
+    }
   };
 
   const handleSyncAST = () => {
@@ -139,65 +175,12 @@ def myGyroidSDF : SDFNode :=
           </div>
         </section>
 
-        {/* Center: Interactive Domain Viewport Shell */}
-        <section className="viewport-panel" aria-label="Domain Viewport Panel">
-          <div className="panel-header">
-            <span>Viewport: Interactive Domain Widget</span>
-            <div className="domain-tags" role="tablist">
-              <button
-                type="button"
-                className={`btn ${activeDomain === 'sdf' ? 'btn-primary' : ''}`}
-                style={{ padding: '2px 8px', fontSize: '0.75rem' }}
-                onClick={() => setActiveDomain('sdf')}
-                data-testid="domain-tab-sdf"
-              >
-                3D SDF
-              </button>
-              <button
-                type="button"
-                className={`btn ${activeDomain === 'audio' ? 'btn-primary' : ''}`}
-                style={{ padding: '2px 8px', fontSize: '0.75rem' }}
-                onClick={() => setActiveDomain('audio')}
-                data-testid="domain-tab-audio"
-              >
-                WebAudio
-              </button>
-              <button
-                type="button"
-                className={`btn ${activeDomain === 'plotter' ? 'btn-primary' : ''}`}
-                style={{ padding: '2px 8px', fontSize: '0.75rem' }}
-                onClick={() => setActiveDomain('plotter')}
-                data-testid="domain-tab-plotter"
-              >
-                Hyperdim
-              </button>
-            </div>
-          </div>
-          <div className="widget-stage" data-testid="widget-viewport">
-            <div className="stage-card">
-              <div className="stage-icon">
-                {activeDomain === 'sdf' && '🔮'}
-                {activeDomain === 'audio' && '🎛️'}
-                {activeDomain === 'plotter' && '📈'}
-                {activeDomain === 'hardware' && '⚡'}
-              </div>
-              <h2 className="stage-title">
-                {activeDomain === 'sdf' && '3D WebGL SDF Raymarching'}
-                {activeDomain === 'audio' && 'WebAudio DSP Synthesis & FFT'}
-                {activeDomain === 'plotter' && 'Generalized Hyperdim Plotter'}
-                {activeDomain === 'hardware' && 'Hardware Pipeline Visualizer'}
-              </h2>
-              <p className="stage-description">
-                Interactive client-side domain widget powered by typed Lean 4 AST dispatch and real-time FreeParam reactivity.
-              </p>
-              <div className="domain-tags">
-                <span className="domain-tag">Zero Server Footprint</span>
-                <span className="domain-tag">GitHub Pages PWA</span>
-                <span className="domain-tag">60 FPS WebGL/Audio</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Center: Extensible Interactive Domain Viewport Shell */}
+        <ViewportShell
+          activeDomainTab={activeDomain}
+          onDomainTabClick={handleDomainTabClick}
+          dataTestId="widget-viewport"
+        />
 
         {/* Right: Parameter Inspector Drawer */}
         <ParameterInspector
