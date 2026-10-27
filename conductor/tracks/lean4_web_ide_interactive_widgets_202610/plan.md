@@ -79,11 +79,11 @@ graph TD
 
 ---
 
-## Phase 1: Web IDE Application Foundation (Vite + React + Monaco + AST Core)
+## Phase 1: Web IDE Application Foundation (Vite + React + Monaco + AST Core) [checkpoint: 3717fc6]
 
 Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4 syntax tokenization, implementing client-side TypeScript AST models mirroring SymForge Lean 4 IR, writing the bidirectional parser/pretty-printer, and wiring reactive state stores.
 
-- [x] Task 1.1: Web Package Scaffolding (Vite + React 19 + TypeScript + Tailwind CSS)
+- [x] Task 1.1: Web Package Scaffolding (Vite + React 19 + TypeScript + Tailwind CSS) [05bafed]
   - **Objective:** Initialize `packages/web/` workspace with Vite, React 19, TypeScript (strict mode), Tailwind CSS, Vitest testing harness, and monorepo script integration.
   - **Bottleneck Mitigation:** Standalone workspace directory; isolated package configuration independent of Python or Lake builds.
   - **Automated Test Definition:** `npm --prefix packages/web test -- run` and `npm --prefix packages/web run build`
@@ -91,7 +91,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/web_ide_scaffolding.md`
   - **Pass-to-Complete Gate:** Build outputs clean production bundles into `packages/web/dist/` in $< 5$ seconds.
 
-- [x] Task 1.2: Monaco Editor Integration with Lean 4 Monarch Tokenizer & Language Configuration
+- [x] Task 1.2: Monaco Editor Integration with Lean 4 Monarch Tokenizer & Language Configuration [fe0b67e]
   - **Objective:** Configure Monaco Editor with custom Monarch tokenizer for Lean 4 syntax (`def`, `inductive`, `structure`, `deriving`, `import`, attributes), unicode mathematical operators (`→`, `∀`, `∃`, `λ`, `⟦`, `⟧`, `⟨`, `⟩`), and comment folding rules.
   - **Bottleneck Mitigation:** Pure client-side tokenizer configuration; no external language server process required for syntax highlighting and token identification.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/editor/leanTokenizer.test.ts`
@@ -99,7 +99,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/lean4_monaco_editor.md`
   - **Pass-to-Complete Gate:** 100% tokenization accuracy across standard SymForge Lean 4 code fixtures.
 
-- [x] Task 1.3: Client-Side SymForge AST Core Models & Lean JSON Serialization
+- [x] Task 1.3: Client-Side SymForge AST Core Models & Lean JSON Serialization [bb807c9]
   - **Objective:** Implement immutable TypeScript AST classes mirroring `SymforgeIr.Types` (`FreeParam`, `AudioNode`, `SDFNode`, `HardwareNode`, `UniversalNode`) with bidirectional JSON serialization/deserialization identical to Lean 4 `toJson` / `fromJson`.
   - **Bottleneck Mitigation:** Zero-dependency functional data structures with structural equality and type guards.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/ast/astModels.test.ts`
@@ -107,7 +107,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/client_ast_engine.md`
   - **Pass-to-Complete Gate:** 100% test pass on 500 generated AST trees matching Lean 4 JSON schema invariants.
 
-- [x] Task 1.4: Bidirectional Lean 4 AST Parser & Pretty-Printer (Code $\leftrightarrow$ AST)
+- [x] Task 1.4: Bidirectional Lean 4 AST Parser & Pretty-Printer (Code $\leftrightarrow$ AST) [5d60a22]
   - **Objective:** Implement a recursive descent parser that parses Lean 4 domain declarations (`def myShape : SDFNode := ...`) into typed AST nodes, and a deterministic pretty-printer formatting AST nodes back into idiomatic Lean 4 code.
   - **Bottleneck Mitigation:** Self-contained parser with explicit syntax error recovery and precise source line/column span tracking.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/parser/leanParser.test.ts`
@@ -115,7 +115,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/lean4_ast_parser.md`
   - **Pass-to-Complete Gate:** Parses 50 canonical Audio and SDF Lean 4 program samples with zero syntax errors.
 
-- [x] Task 1.5: FreeParam Reactive State Store & Parameter Inspector
+- [x] Task 1.5: FreeParam Reactive State Store & Parameter Inspector [5c0602a]
   - **Objective:** Build the Zustand reactive state store extracting all `FreeParam` instances from the active AST, providing an interactive UI inspector panel for continuous parameter adjustments with immediate state notification.
   - **Bottleneck Mitigation:** Decouples parameter mutations from AST structural updates to avoid redundant re-renders.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/store/freeParamStore.test.ts`
@@ -123,7 +123,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/freeparam_reactive_store.md`
   - **Pass-to-Complete Gate:** Reactive store updates parameter values in $< 1$ ms with verified state subscriber callbacks.
 
-- [ ] Task 1.6: Phase 1 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 1.6: Phase 1 Verification & Checkpoint (Refer to workflow.md) [3717fc6]
 
 ---
 
