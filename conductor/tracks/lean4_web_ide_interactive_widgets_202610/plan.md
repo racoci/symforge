@@ -99,7 +99,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/lean4_monaco_editor.md`
   - **Pass-to-Complete Gate:** 100% tokenization accuracy across standard SymForge Lean 4 code fixtures.
 
-- [ ] Task 1.3: Client-Side SymForge AST Core Models & Lean JSON Serialization
+- [x] Task 1.3: Client-Side SymForge AST Core Models & Lean JSON Serialization
   - **Objective:** Implement immutable TypeScript AST classes mirroring `SymforgeIr.Types` (`FreeParam`, `AudioNode`, `SDFNode`, `HardwareNode`, `UniversalNode`) with bidirectional JSON serialization/deserialization identical to Lean 4 `toJson` / `fromJson`.
   - **Bottleneck Mitigation:** Zero-dependency functional data structures with structural equality and type guards.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/ast/astModels.test.ts`
