@@ -139,7 +139,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/domain_widget_registry.md`
   - **Pass-to-Complete Gate:** Registry correctly maps 4 distinct domain ASTs to their designated widget components.
 
-- [ ] Task 2.2: 3D WebGL Raymarching Widget for `SDFNode` (Three.js + GLSL Codegen)
+- [x] Task 2.2: 3D WebGL Raymarching Widget for `SDFNode` (Three.js + GLSL Codegen)
   - **Objective:** Implement the GLSL raymarching shader generator transpiling `SDFNode` into GLSL `float map(vec3 p)` functions, mounted in a Three.js WebGL canvas with OrbitControls, Phong shading, normal estimation, and interactive cross-sectional slicing planes ($xy, yz, zx$).
   - **Bottleneck Mitigation:** Bounded raymarching loop (max 128 steps) with distance relaxation and shader compilation error boundaries.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/sdf/glslCodegen.test.ts`

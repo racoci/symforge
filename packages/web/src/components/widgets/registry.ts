@@ -9,8 +9,8 @@ import type {
   DomainWidgetDefinition,
   WidgetRegistryInterface,
 } from './types';
+import { SDFRaymarchWidget } from './sdf/SDFRaymarchWidget';
 import {
-  SDFRaymarchWidget,
   AudioDSPWidget,
   HardwareTimelineWidget,
   HyperdimPlotterWidget,

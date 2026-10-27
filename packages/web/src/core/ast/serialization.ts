@@ -31,6 +31,7 @@ import {
   createBox,
   createCylinder,
   createTorus,
+  createPlane,
   createTranslate,
   createRotate,
   createScale,
@@ -232,6 +233,12 @@ function serializeSDFNode(node: SDFNode): Record<string, any> {
           minorRadius: serializeFreeParam(node.minorRadius),
         },
       };
+    case 'plane':
+      return {
+        plane: {
+          offset: serializeFreeParam(node.offset),
+        },
+      };
     case 'translate':
       return {
         translate: {
@@ -353,7 +360,7 @@ export function serializeToLeanJson(node: ASTNode): any {
     return serializeAudioNode(node as AudioNode);
   }
 
-  const sdfKinds = ['sphere', 'box', 'cylinder', 'torus', 'translate', 'rotate', 'scale', 'union', 'smooth_union', 'intersection', 'difference'];
+  const sdfKinds = ['sphere', 'box', 'cylinder', 'torus', 'plane', 'translate', 'rotate', 'scale', 'union', 'smooth_union', 'intersection', 'difference'];
   if (sdfKinds.includes(node.kind)) {
     return serializeSDFNode(node as SDFNode);
   }
@@ -457,6 +464,10 @@ function deserializeSDFTag(tag: string, fields: Record<string, any>): SDFNode | 
       return createTorus(
         deserializeFreeParam(fields.majorRadius ?? fields.major_radius),
         deserializeFreeParam(fields.minorRadius ?? fields.minor_radius)
+      );
+    case 'plane':
+      return createPlane(
+        deserializeFreeParam(fields.offset)
       );
     case 'translate':
       return createTranslate(

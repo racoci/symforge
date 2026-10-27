@@ -24,6 +24,7 @@ import type {
   BoxSDFNode,
   CylinderSDFNode,
   TorusSDFNode,
+  PlaneSDFNode,
   TranslateSDFNode,
   RotateSDFNode,
   ScaleSDFNode,
@@ -159,6 +160,13 @@ export function createCylinder(radius: FreeParam, height: FreeParam): CylinderSD
 
 export function createTorus(majorRadius: FreeParam, minorRadius: FreeParam): TorusSDFNode {
   return Object.freeze({ kind: 'torus', majorRadius, minorRadius });
+}
+
+export function createPlane(
+  offset: FreeParam,
+  normal?: { readonly x: number; readonly y: number; readonly z: number }
+): PlaneSDFNode {
+  return Object.freeze({ kind: 'plane', offset, normal });
 }
 
 export function createTranslate(
@@ -341,7 +349,7 @@ export function isAudioNode(node: ASTNode): node is AudioNode {
 }
 
 export function isSDFNode(node: ASTNode): node is SDFNode {
-  const sdfKinds = ['sphere', 'box', 'cylinder', 'torus', 'translate', 'rotate', 'scale', 'union', 'smooth_union', 'intersection', 'difference'];
+  const sdfKinds = ['sphere', 'box', 'cylinder', 'torus', 'plane', 'translate', 'rotate', 'scale', 'union', 'smooth_union', 'intersection', 'difference'];
   if (sdfKinds.includes(node.kind)) return true;
   if (node.kind === 'hole' && (node as HoleNode).domain === 'sdf') return true;
   if (node.kind === 'macro' && (node as MacroCallNode).domain === 'sdf') return true;
@@ -456,6 +464,8 @@ function getDirectParams(node: ASTNode): FreeParam[] {
       return [node.radius, node.height];
     case 'torus':
       return [node.majorRadius, node.minorRadius];
+    case 'plane':
+      return [node.offset];
     case 'translate':
       return [node.dx, node.dy, node.dz];
     case 'rotate':
@@ -614,6 +624,8 @@ function cloneSDFNode(node: SDFNode, paramValues: Record<string, number>): SDFNo
         cloneFreeParam(node.majorRadius, paramValues),
         cloneFreeParam(node.minorRadius, paramValues)
       );
+    case 'plane':
+      return createPlane(cloneFreeParam(node.offset, paramValues), node.normal);
     case 'translate':
       return createTranslate(
         cloneFreeParam(node.dx, paramValues),
@@ -714,6 +726,7 @@ export function cloneWithParams<T extends ASTNode>(node: T, paramValues: Record<
     case 'box':
     case 'cylinder':
     case 'torus':
+    case 'plane':
     case 'translate':
     case 'rotate':
     case 'scale':

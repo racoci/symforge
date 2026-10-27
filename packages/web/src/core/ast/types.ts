@@ -131,6 +131,12 @@ export interface TorusSDFNode {
   readonly minorRadius: FreeParam;
 }
 
+export interface PlaneSDFNode {
+  readonly kind: 'plane';
+  readonly offset: FreeParam;
+  readonly normal?: { readonly x: number; readonly y: number; readonly z: number };
+}
+
 export interface TranslateSDFNode {
   readonly kind: 'translate';
   readonly dx: FreeParam;
@@ -197,6 +203,7 @@ export type SDFNode =
   | BoxSDFNode
   | CylinderSDFNode
   | TorusSDFNode
+  | PlaneSDFNode
   | TranslateSDFNode
   | RotateSDFNode
   | ScaleSDFNode

@@ -23,6 +23,7 @@ import {
   createBox,
   createCylinder,
   createTorus,
+  createPlane,
   createTranslate,
   createRotate,
   createScale,
@@ -413,6 +414,11 @@ function parseSDFConstructor(state: ParserState, base: string, startSpan: Source
       node = createTorus(major, minor);
       break;
     }
+    case 'plane': {
+      const offset = parseParamArgument(state, 'offset');
+      node = createPlane(offset);
+      break;
+    }
     case 'translate': {
       const dx = parseParamArgument(state, 'dx');
       const dy = parseParamArgument(state, 'dy');
@@ -663,6 +669,7 @@ const SDF_NAMES = new Set([
   'box',
   'cylinder',
   'torus',
+  'plane',
   'translate',
   'rotate',
   'scale',

@@ -92,6 +92,9 @@ function formatSDFExpr(ast: SDFNode, options: FormatOptions, isArg: boolean): st
     case 'torus':
       inner = `${p}torus ${formatFreeParam(ast.majorRadius)} ${formatFreeParam(ast.minorRadius)}`;
       break;
+    case 'plane':
+      inner = `${p}plane ${formatFreeParam(ast.offset)}`;
+      break;
     case 'translate':
       inner = `${p}translate ${formatFreeParam(ast.dx)} ${formatFreeParam(ast.dy)} ${formatFreeParam(ast.dz)} ${formatSDFExpr(ast.child, options, true)}`;
       break;
@@ -212,6 +215,7 @@ function inferDomainType(ast: ASTNode, defaultType?: string): string {
     case 'box':
     case 'cylinder':
     case 'torus':
+    case 'plane':
     case 'translate':
     case 'rotate':
     case 'scale':

@@ -1,67 +1,6 @@
 import React from 'react';
 import type { DomainWidgetProps } from './types';
-import { collectFreeParams } from '../../core/ast/models';
-
-/**
- * Default placeholder stage component for the 3D WebGL Raymarching Widget (Task 2.2).
- */
-export const SDFRaymarchWidget: React.FC<DomainWidgetProps> = ({
-  ast,
-  declarationName,
-}) => {
-  const params = React.useMemo(() => (ast ? collectFreeParams(ast) : []), [ast]);
-
-  return (
-    <div className="widget-stage" data-testid="sdf-raymarch-widget">
-      <div className="stage-card">
-        <div className="stage-icon" aria-hidden="true">🔮</div>
-        <h2 className="stage-title">3D WebGL SDF Raymarching</h2>
-        <p className="stage-description">
-          Interactive 3D WebGL raymarching canvas with Phong illumination and real-time FreeParam uniform modulation for <code>{declarationName || 'SDFNode'}</code>.
-        </p>
-        <div className="domain-tags">
-          <span className="domain-tag">Raymarching 60 FPS</span>
-          <span className="domain-tag">Three.js Canvas</span>
-          <span className="domain-tag">CSG Invariants</span>
-        </div>
-        {params.length > 0 && (
-          <div style={{ marginTop: '16px', width: '100%', textAlign: 'left' }}>
-            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Bound Parameters ({params.length})
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
-              {params.slice(0, 3).map((p) => (
-                <div
-                  key={p.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '0.75rem',
-                    background: 'var(--bg-surface)',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-color)',
-                  }}
-                >
-                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>{p.id}</span>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    [{p.minVal}..{p.maxVal}] (def: {p.defaultVal})
-                  </span>
-                </div>
-              ))}
-              {params.length > 3 && (
-                <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  +{params.length - 3} more in Inspector
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+export { SDFRaymarchWidget } from './sdf/SDFRaymarchWidget';
 
 /**
  * Default placeholder stage component for the WebAudio DSP Synthesis Widget (Task 2.4).
