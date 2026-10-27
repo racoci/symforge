@@ -107,7 +107,7 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
   - **Documentation Artifact:** `docs/architecture/client_ast_engine.md`
   - **Pass-to-Complete Gate:** 100% test pass on 500 generated AST trees matching Lean 4 JSON schema invariants.
 
-- [ ] Task 1.4: Bidirectional Lean 4 AST Parser & Pretty-Printer (Code $\leftrightarrow$ AST)
+- [x] Task 1.4: Bidirectional Lean 4 AST Parser & Pretty-Printer (Code $\leftrightarrow$ AST)
   - **Objective:** Implement a recursive descent parser that parses Lean 4 domain declarations (`def myShape : SDFNode := ...`) into typed AST nodes, and a deterministic pretty-printer formatting AST nodes back into idiomatic Lean 4 code.
   - **Bottleneck Mitigation:** Self-contained parser with explicit syntax error recovery and precise source line/column span tracking.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/parser/leanParser.test.ts`
