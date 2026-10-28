@@ -200,7 +200,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/scoped_selection_mapper.md`
   - **Pass-to-Complete Gate:** 100% correct node identification across 50 simulated user selection ranges.
 
-- [ ] Task 3.2: Type Resolution, Hole Puncturing (`Hole[T]`) & Structural Context Extractor
+- [x] Task 3.2: Type Resolution, Hole Puncturing (`Hole[T]`) & Structural Context Extractor
   - **Objective:** Implement AST hole puncturing that replaces $N_{\text{target}}$ with a typed placeholder `HoleNode(id, type, inputs)` and extracts the structural context tuple $\mathcal{C} = (\text{Parent}, \text{Grandparent}, \text{LeftSibling}, \text{Depth})$.
   - **Bottleneck Mitigation:** Immutable AST cloning ensures the active editor document remains untouched during analysis.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/generator/holePuncturing.test.ts`
