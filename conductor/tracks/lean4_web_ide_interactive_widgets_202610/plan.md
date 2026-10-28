@@ -163,7 +163,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/webaudio_dsp_spectrogram_widget.md`
   - **Pass-to-Complete Gate:** Compiles 15 distinct procedural audio patches without audio buffer underruns or NaN samples.
 
-- [ ] Task 2.5: Generalized Hyperdimensional Function Plotter for $f: \mathbb{R}^n \to \mathbb{R}^m$
+- [x] Task 2.5: Generalized Hyperdimensional Function Plotter for $f: \mathbb{R}^n \to \mathbb{R}^m$
   - **Objective:** Build the multidimensional mathematical function evaluator featuring interactive 2D contour slice heatmaps along selected axis pairs $(x_i, x_j)$, 3D heightmap surface meshes, and orthogonal dimension scrubbers for $x_3 \dots x_n$.
   - **Bottleneck Mitigation:** Vectorized evaluation over uniform coordinate grids using TypedArrays (`Float32Array`) for zero-allocation performance.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/hyperdim/functionEvaluator.test.ts`

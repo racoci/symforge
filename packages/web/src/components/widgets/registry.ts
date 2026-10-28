@@ -11,10 +11,8 @@ import type {
 } from './types';
 import { SDFRaymarchWidget } from './sdf/SDFRaymarchWidget';
 import { AudioDSPWidget } from './audio';
-import {
-  HardwareTimelineWidget,
-  HyperdimPlotterWidget,
-} from './DefaultDomainWidgets';
+import { HyperdimPlotterWidget } from './hyperdim';
+import { HardwareTimelineWidget } from './DefaultDomainWidgets';
 import { GenericASTWidget } from './GenericASTWidget';
 
 type WidgetChangeListener = (widgets: DomainWidgetDefinition[]) => void;
