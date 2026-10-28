@@ -127,11 +127,11 @@ Focus: Scaffolding `packages/web/`, integrating Monaco Editor with custom Lean 4
 
 ---
 
-## Phase 2: Domain-Agnostic Interactive Visual Widgets
+## Phase 2: Domain-Agnostic Interactive Visual Widgets [checkpoint: a2cd780]
 
 Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewports: 3D WebGL Raymarching widget for `SDFNode` with real-time `FreeParam` sliders, WebAudio DSP synthesis and FFT spectrogram widget for `AudioNode`, and Generalized Hyperdimensional Function Plotter for arbitrary $f: \mathbb{R}^n \to \mathbb{R}^m$ along with hardware execution timelines.
 
-- [x] Task 2.1: Domain Widget Registry & Extensible Viewport Shell
+- [x] Task 2.1: Domain Widget Registry & Extensible Viewport Shell [452e8c4]
   - **Objective:** Create the `DomainWidgetRegistry` interface and top-level responsive layout shell that dynamically inspects AST return types (`SDFNode`, `AudioNode`, `HardwareNode`, $f: \mathbb{R}^n \to \mathbb{R}^m$) and mounts the appropriate visual widget.
   - **Bottleneck Mitigation:** Pluggable React component architecture allowing seamless addition of future domain visualizers.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/widgetRegistry.test.ts`
@@ -139,7 +139,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/domain_widget_registry.md`
   - **Pass-to-Complete Gate:** Registry correctly maps 4 distinct domain ASTs to their designated widget components.
 
-- [x] Task 2.2: 3D WebGL Raymarching Widget for `SDFNode` (Three.js + GLSL Codegen)
+- [x] Task 2.2: 3D WebGL Raymarching Widget for `SDFNode` (Three.js + GLSL Codegen) [6d5777f]
   - **Objective:** Implement the GLSL raymarching shader generator transpiling `SDFNode` into GLSL `float map(vec3 p)` functions, mounted in a Three.js WebGL canvas with OrbitControls, Phong shading, normal estimation, and interactive cross-sectional slicing planes ($xy, yz, zx$).
   - **Bottleneck Mitigation:** Bounded raymarching loop (max 128 steps) with distance relaxation and shader compilation error boundaries.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/sdf/glslCodegen.test.ts`
@@ -147,7 +147,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/webgl_sdf_raymarching_widget.md`
   - **Pass-to-Complete Gate:** Validates GLSL output strings against 20 complex CSG geometric trees.
 
-- [x] Task 2.3: Real-Time `FreeParam` Uniform Binding & Shader Parameter Sliders
+- [x] Task 2.3: Real-Time `FreeParam` Uniform Binding & Shader Parameter Sliders [67b61dc]
   - **Objective:** Wire AST `FreeParam` variables directly to GLSL shader uniforms `u_param_<id>`, enabling continuous parameter slider scrubbing in the UI at 60 FPS without shader re-compilation.
   - **Bottleneck Mitigation:** Updates WebGL uniforms via `material.uniforms[key].value` directly on GPU memory buffer.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/sdf/uniformBinding.test.ts`
@@ -171,7 +171,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/hyperdimensional_function_plotter.md`
   - **Pass-to-Complete Gate:** Evaluates $100 \times 100$ grid points across 5 dimensions in $< 15$ ms.
 
-- [x] Task 2.6: Hardware Instruction Sequence Visualizer & Register Pipeline Timeline
+- [x] Task 2.6: Hardware Instruction Sequence Visualizer & Register Pipeline Timeline [bde7664]
   - **Objective:** Implement the visualizer for `HardwareNode` sequences, rendering an interactive directed acyclic register dependency DAG, cycle execution Gantt chart, and register allocation state inspector.
   - **Bottleneck Mitigation:** Pure SVG / Canvas rendering with topological cycle ordering.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/hardware/hardwarePipeline.test.ts`
@@ -179,7 +179,12 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/hardware_pipeline_visualizer.md`
   - **Pass-to-Complete Gate:** Generates acyclic register DAG and pipeline timeline for 10 benchmark instruction sequences.
 
-- [ ] Task 2.7: Phase 2 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 2.7: Phase 2 Verification & Checkpoint (Refer to workflow.md) [a2cd780]
+  - **Objective:** Execute comprehensive multi-tier test suite verification across web, python, and lean packages, build production bundles, assert static architectural compliance with zero violations, perform recursive risk analysis, and establish Phase 2 checkpoint.
+  - **Automated Test Definition:** `npm --prefix packages/web test -- run && npm --prefix packages/web run build && .venv/bin/pytest -q tests/ && packages/lean/symforge_ir/lake build && python3 /home/racoci/.gemini/skills/code-guard-validator/scripts/validate_rules.py .`
+    - Invariants: 100% test pass rate across all tiers, 0 build errors, 0 architectural violations.
+  - **Documentation Artifact:** `docs/architecture/phase2_checkpoint_verification.md`
+  - **Pass-to-Complete Gate:** 226/226 web tests pass, 352/352 python tests pass, lake builds 12 jobs, and 0 code guard violations.
 
 ---
 
@@ -360,5 +365,97 @@ graph TD
         R3_3 --> M3_3[Mitigation: Shared Float32Array ring-buffer without GC allocations]
         M3_3 --> R3_4[Depth 4: Ring-buffer lock contention between audio and UI render threads<br/>Low Likelihood]
         R3_4 --> T3[Branch Terminated: Low Likelihood]
+    end
+```
+
+### Phase 3 Transition Recursive Risk Analysis (Tasks 3.1 - 3.6)
+
+```text
++-------------------------------------------------------------------------------------------------------------------------+
+|                                    PHASE 3 RECURSIVE RISK & MITIGATION ARCHITECTURE                                     |
+|                                                                                                                         |
+| [Depth 1] Arbitrary Monaco selection across token boundaries disrupts AST hole puncturing (High Likelihood)             |
+|   `--> Mitigation: AST span bounding expander resolving minimal enclosing syntactically complete subtree               |
+|         `--> [Depth 2] Outward bounding over-expands whitespace/comment trivia to root declaration (Medium Likelihood)  |
+|               `--> Mitigation: Trivia-rejection heuristic capping expansion at >=70% character overlap                  |
+|                     `--> [Depth 3] Multi-node sibling selection creates ambiguous hole targets (Medium Likelihood)      |
+|                           `--> Mitigation: Group contiguous siblings into SequenceNode with synthetic tuple hole        |
+|                                 `--> [Depth 4] Variadic tuple hole generates candidates with invalid arity (Medium)     |
+|                                       `--> Mitigation: Strict arity-matching & type-unification filtering              |
+|                                             `--> [Depth 5] Polymorphic unification causes exponential backtracking      |
+|                                                   `--> Mitigation: Ground-type caching with 5ms unification timeout     |
+|                                                         `--> [Depth 6] Timeout falls back to primitive atomic terms     |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+| [Depth 1] Recursive PCFG grammar rules cause unbounded derivation expansion in Web Worker (High Likelihood)             |
+|   `--> Mitigation: Hard derivation depth cap (D <= 6) and derivation step counter (S <= 100)                             |
+|         `--> [Depth 2] Hard cutoff produces unbalanced trees with excessive trivial terminals (Medium Likelihood)       |
+|               `--> Mitigation: Depth-budgeted dynamic probabilistic production re-weighting                             |
+|                     `--> [Depth 3] Dynamic re-weighting slows down real-time sampling throughput (Medium Likelihood)    |
+|                           `--> Mitigation: Pre-computed depth-indexed production lookup tables                          |
+|                                 `--> [Depth 4] Pre-computed tables consume excessive worker memory (>50MB) (Medium)     |
+|                                       `--> Mitigation: Serialized compact ArrayBuffer transferred via postMessage       |
+|                                             `--> [Depth 5] SharedArrayBuffer requires COOP/COEP breaking GitHub Pages   |
+|                                                   `--> Mitigation: Zero-copy transferable ArrayBuffer (no HTTP headers) |
+|                                                         `--> [Depth 6] Minor 2ms structured clone latency on worker boot |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+| [Depth 1] 1-Click code injection via model.setValue destroys Monaco undo/redo stack (High Likelihood)                   |
+|   `--> Mitigation: Atomic editor.executeEdits transaction using precise target AST text span                            |
+|         `--> [Depth 2] Concurrent user typing makes target range offsets stale, corrupting code (Medium Likelihood)     |
+|               `--> Mitigation: Track range decorations via onDidChangeModelContent; auto-dismiss if target modified     |
+|                     `--> [Depth 3] Frequent dismissals on minor keystrokes frustrate user exploration (Medium)          |
+|                           `--> Mitigation: Non-destructive ghost-text preview overlay with Tab commit                   |
+|                                 `--> [Depth 4] Ghost-text overlay conflicts with native browser IME / autocompletes     |
+|                                       `--> Mitigation: Temporarily suppress autocomplete popups during variation mode   |
+|                                             `--> [Depth 5] Gallery focus transfer causes editor blur/focus jitter       |
+|                                                   `--> Mitigation: Retain editor focus with Alt+1..5 card hotkeys       |
+|                                                         `--> [Depth 6] Alt-key shortcut collisions on Linux desktops    |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+```
+
+```mermaid
+graph TD
+    subgraph P3Branch1 [Branch 1: Selection Bounding & Hole Puncturing]
+        P3R1_1["Depth 1: Selection across token boundaries causes syntax hole disruption<br/>High Likelihood"] --> P3M1_1["Mitigation: AST span bounding expander to minimal enclosing subtree"]
+        P3M1_1 --> P3R1_2["Depth 2: Outward expansion over-expands whitespace/comments to root<br/>Medium Likelihood"]
+        P3R1_2 --> P3M1_2["Mitigation: Selection containment heuristic (70% overlap threshold)"]
+        P3M1_2 --> P3R1_3["Depth 3: Selection spans multiple sibling arguments in function application<br/>Medium Likelihood"]
+        P3R1_3 --> P3M1_3["Mitigation: Group contiguous siblings into SequenceNode with tuple hole"]
+        P3M1_3 --> P3R1_4["Depth 4: Variadic tuple hole generates mismatched argument arity<br/>Medium Likelihood"]
+        P3R1_4 --> P3M1_4["Mitigation: Enforce strict arity matching and type unification"]
+        P3M1_4 --> P3R1_5["Depth 5: Polymorphic constructor unification causes exponential backtracking<br/>Medium Likelihood"]
+        P3R1_5 --> P3M1_5["Mitigation: Monomorphic ground type caching with 5ms unification timeout"]
+        P3M1_5 --> P3R1_6["Depth 6: Timeout fallback to primitive atomic substitutions<br/>Low Likelihood"]
+        P3R1_6 --> P3T1["Branch Terminated: Depth 6 / Low Likelihood"]
+    end
+
+    subgraph P3Branch2 [Branch 2: Stochastic PCFG Sampling & Worker Saturation]
+        P3R2_1["Depth 1: Recursive non-terminals cause unbounded derivation expansion<br/>High Likelihood"] --> P3M2_1["Mitigation: Hard derivation depth cap D <= 6 and step cap S <= 100"]
+        P3M2_1 --> P3R2_2["Depth 2: Strict cutoff produces unbalanced trees with trivial terminals<br/>Medium Likelihood"]
+        P3R2_2 --> P3M2_2["Mitigation: Depth-budgeted probabilistic production weighting"]
+        P3M2_2 --> P3R2_3["Depth 3: Dynamic re-weighting slows down real-time sampling<br/>Medium Likelihood"]
+        P3R2_3 --> P3M2_3["Mitigation: Pre-compute depth-indexed production lookup tables"]
+        P3M2_3 --> P3R2_4["Depth 4: Pre-computed tables consume high worker memory (>50MB)<br/>Medium Likelihood"]
+        P3R2_4 --> P3M2_4["Mitigation: Serialized binary ArrayBuffer transferred via postMessage"]
+        P3M2_4 --> P3R2_5["Depth 5: SharedArrayBuffer requires COOP/COEP headers breaking GitHub Pages<br/>Medium Likelihood"]
+        P3R2_5 --> P3M2_5["Mitigation: Zero-copy transferable ArrayBuffer avoids server header requirements"]
+        P3M2_5 --> P3R2_6["Depth 6: Minor 2ms structured-clone latency on initial worker boot<br/>Low Likelihood"]
+        P3R2_6 --> P3T2["Branch Terminated: Depth 6 / Low Likelihood"]
+    end
+
+    subgraph P3Branch3 [Branch 3: 1-Click Injection & Monaco Undo/Redo Invalidation]
+        P3R3_1["Depth 1: Model replacement destroys undo/redo history and scroll position<br/>High Likelihood"] --> P3M3_1["Mitigation: Use editor.executeEdits with precise target AST text span"]
+        P3M3_1 --> P3R3_2["Depth 2: Concurrent typing while gallery open causes stale offset overwrite<br/>Medium Likelihood"]
+        P3R3_2 --> P3M3_2["Mitigation: Track range decorations and auto-dismiss on target edit"]
+        P3M3_2 --> P3R3_3["Depth 3: Frequent dismissals on minor keystrokes frustrate user editing<br/>Medium Likelihood"]
+        P3R3_3 --> P3M3_3["Mitigation: Non-destructive preview ghost-text overlay with Tab commit"]
+        P3M3_3 --> P3R3_4["Depth 4: Ghost-text conflicts with native IME and autocomplete popups<br/>Medium Likelihood"]
+        P3R3_4 --> P3M3_4["Mitigation: Suppress default autocompletes during active variation preview"]
+        P3M3_4 --> P3R3_5["Depth 5: Focus transfer between gallery cards and Monaco causes focus jitter<br/>Medium Likelihood"]
+        P3R3_5 --> P3M3_5["Mitigation: Retain keyboard focus in Monaco with Alt+1..5 hotkeys"]
+        P3M3_5 --> P3R3_6["Depth 6: Alt-key collisions on Linux/Windows desktop managers<br/>Low Likelihood"]
+        P3R3_6 --> P3T3["Branch Terminated: Depth 6 / Low Likelihood"]
     end
 ```
