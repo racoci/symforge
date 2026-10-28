@@ -185,7 +185,7 @@ function formatUniversalExpr(ast: ASTNode, options: FormatOptions, isArg: boolea
   return isArg ? `(${inner})` : inner;
 }
 
-function formatASTExpression(ast: ASTNode, domainType: string, options: FormatOptions): string {
+export function formatASTExpression(ast: ASTNode, domainType: string, options: FormatOptions = {}): string {
   if (domainType === 'AudioNode') {
     return formatAudioExpr(ast as AudioNode, options, false);
   }
@@ -255,6 +255,10 @@ export function formatLeanCode(
 
   const resolvedDomain = inferDomainType(ast, domainType);
   const expr = formatASTExpression(ast, resolvedDomain, resolvedOptions);
+
+  if (!declarationName || declarationName.trim() === '') {
+    return expr;
+  }
 
   if (resolvedOptions.compact) {
     return `def ${declarationName} : ${resolvedDomain} := ${expr}`;

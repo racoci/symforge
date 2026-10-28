@@ -208,7 +208,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/hole_puncturing_context.md`
   - **Pass-to-Complete Gate:** Correctly punctures holes and extracts contexts across 30 varied AST subtrees.
 
-- [ ] Task 3.3: Client-Side Contextual PCFG/PHOG Sampler ($L_1 \dots L_5$ Stratification)
+- [x] Task 3.3: Client-Side Contextual PCFG/PHOG Sampler ($L_1 \dots L_5$ Stratification)
   - **Objective:** Implement the client-side probabilistic grammar sampler generating $K$ independent typed variations preserving the target input/output type signature, stratified across 5 complexity levels ($L_1$: Atomic, $L_2$: Unary Transform, $L_3$: Binary Combinator, $L_4$: Hierarchical, $L_5$: Structural Abstraction).
   - **Bottleneck Mitigation:** Strict derivation depth cap ($D \le 6$) and type-directed production pruning prevent infinite loops and invalid programs.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/pcfg/pcfgSampler.test.ts`

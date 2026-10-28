@@ -8,3 +8,4 @@ export * from './ast';
 export * from './parser';
 export * from './store';
 export * from './generator';
+export * from './pcfg';
