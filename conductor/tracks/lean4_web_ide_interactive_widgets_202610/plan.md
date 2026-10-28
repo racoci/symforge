@@ -147,7 +147,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/webgl_sdf_raymarching_widget.md`
   - **Pass-to-Complete Gate:** Validates GLSL output strings against 20 complex CSG geometric trees.
 
-- [ ] Task 2.3: Real-Time `FreeParam` Uniform Binding & Shader Parameter Sliders
+- [x] Task 2.3: Real-Time `FreeParam` Uniform Binding & Shader Parameter Sliders
   - **Objective:** Wire AST `FreeParam` variables directly to GLSL shader uniforms `u_param_<id>`, enabling continuous parameter slider scrubbing in the UI at 60 FPS without shader re-compilation.
   - **Bottleneck Mitigation:** Updates WebGL uniforms via `material.uniforms[key].value` directly on GPU memory buffer.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/sdf/uniformBinding.test.ts`

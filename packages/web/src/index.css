@@ -346,6 +346,109 @@ html, body {
   cursor: pointer;
 }
 
+/* SDF Floating Parameter Scrubber Overlay */
+.sdf-param-overlay {
+  position: absolute;
+  top: 56px;
+  right: 12px;
+  width: 280px;
+  max-height: calc(100% - 72px);
+  overflow-y: auto;
+  background-color: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  z-index: 15;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+}
+
+.sdf-param-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.sdf-param-overlay-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-cyan);
+}
+
+.sdf-param-overlay-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdf-param-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sdf-param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.sdf-param-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.sdf-param-name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sdf-param-val {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  font-weight: 500;
+}
+
+.sdf-param-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sdf-param-slider-row .sdf-slider {
+  flex: 1;
+}
+
+.sdf-param-range-bounds {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.625rem;
+  color: var(--text-muted);
+}
+
+.sdf-param-empty {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 0;
+}
+
 /* Bottom Status Bar */
 .status-bar {
   display: flex;
