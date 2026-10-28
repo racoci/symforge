@@ -10,8 +10,8 @@ import type {
   WidgetRegistryInterface,
 } from './types';
 import { SDFRaymarchWidget } from './sdf/SDFRaymarchWidget';
+import { AudioDSPWidget } from './audio';
 import {
-  AudioDSPWidget,
   HardwareTimelineWidget,
   HyperdimPlotterWidget,
 } from './DefaultDomainWidgets';

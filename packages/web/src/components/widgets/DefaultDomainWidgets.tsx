@@ -1,30 +1,7 @@
 import React from 'react';
 import type { DomainWidgetProps } from './types';
 export { SDFRaymarchWidget } from './sdf/SDFRaymarchWidget';
-
-/**
- * Default placeholder stage component for the WebAudio DSP Synthesis Widget (Task 2.4).
- */
-export const AudioDSPWidget: React.FC<DomainWidgetProps> = ({
-  declarationName,
-}) => {
-  return (
-    <div className="widget-stage" data-testid="audio-dsp-widget">
-      <div className="stage-card">
-        <div className="stage-icon" aria-hidden="true">🎛️</div>
-        <h2 className="stage-title">WebAudio DSP Synthesis & FFT</h2>
-        <p className="stage-description">
-          Real-time procedural WebAudio synthesis graph with live FFT frequency waterfall and oscilloscope for <code>{declarationName || 'AudioNode'}</code>.
-        </p>
-        <div className="domain-tags">
-          <span className="domain-tag">WebAudio Graph</span>
-          <span className="domain-tag">2048-pt FFT</span>
-          <span className="domain-tag">Zero-Latency DSP</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+export { AudioDSPWidget } from './audio/AudioDSPWidget';
 
 /**
  * Default placeholder stage component for the Hardware Pipeline Visualizer (Task 2.6).
