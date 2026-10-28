@@ -148,6 +148,24 @@ export const LeanEditor: React.FC<LeanEditorProps> = ({
       >
         {value}
       </div>
+
+      {/* Hidden button enabling selection simulation in testing environments */}
+      {process.env.NODE_ENV === 'test' && onSelectionChange && (
+        <button
+          type="button"
+          style={{ display: 'none' }}
+          data-testid="simulate-selection-btn"
+          onClick={() => {
+            onSelectionChange({
+              startLine: 5,
+              startCol: 5,
+              endLine: 5,
+              endCol: 57,
+              selectedText: '(SDFNode.sphere (FreeParam.mk "radius" 1.25 0.5 3.0))',
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

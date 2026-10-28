@@ -84,4 +84,27 @@ describe('SymForge Web IDE App Shell', () => {
     fireEvent.click(syncBtn);
     expect(screen.getByTestId('param-count-badge')).toBeInTheDocument();
   });
+
+  it('displays scoped selection badge and variation trigger when sub-expression is selected', () => {
+    render(<App />);
+    const simBtn = screen.getByTestId('simulate-selection-btn');
+    expect(simBtn).toBeInTheDocument();
+
+    // Trigger selection
+    fireEvent.click(simBtn);
+
+    // Scoped selection badge should be visible in header
+    const badge = screen.getByTestId('scoped-selection-badge');
+    expect(badge).toBeInTheDocument();
+    expect(badge.textContent).toMatch(/🎯 Scope: SphereNode/);
+
+    // Variation trigger button in editor header should be visible
+    const triggerBtn = screen.getByTestId('editor-generate-variations-btn');
+    expect(triggerBtn).toBeInTheDocument();
+    fireEvent.click(triggerBtn);
+
+    // Variation counter in top header should increment
+    const variationBtn = screen.getByTestId('generate-variation-btn');
+    expect(variationBtn).toHaveTextContent('(1)');
+  });
 });

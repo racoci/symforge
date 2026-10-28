@@ -5,6 +5,12 @@ import { ViewportShell } from './components/widgets';
 import { useFreeParamStore } from './core/store/freeParamStore';
 import { parseLeanCode } from './core/parser/leanParser';
 import { getNodeCount } from './core/ast/models';
+import {
+  findEnclosingASTNode,
+  computeSelectionRange,
+  formatNodeDisplayName,
+  type NodeMatchResult,
+} from './core/generator';
 
 export interface AppProps {
   initialDomain?: 'sdf' | 'audio' | 'plotter' | 'hardware';
@@ -52,23 +58,58 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
 
   const [leanCode, setLeanCode] = useState<string>(DOMAIN_PRESETS[initialDomain] || DOMAIN_PRESETS.sdf);
 
+  // Memoize AST parse result from current Lean 4 code
+  const parseResult = useMemo(() => {
+    try {
+      return parseLeanCode(leanCode);
+    } catch (err) {
+      console.error('[SymForge App] Transient parse failure during code editing:', {
+        error: err,
+        codeLength: leanCode.length,
+        timestamp: Date.now(),
+      });
+      return null;
+    }
+  }, [leanCode]);
+
   // Synchronize AST to FreeParam Reactive State Store on code change
   useEffect(() => {
+    if (!parseResult) return;
     try {
-      const result = parseLeanCode(leanCode);
-      if (result.errors.length === 0) {
-        useFreeParamStore.getState().setAST(result.ast, result.declarationName, result.domainType);
-      } else if (result.ast) {
-        useFreeParamStore.getState().setAST(result.ast, result.declarationName, result.domainType);
+      if (parseResult.errors.length === 0 || parseResult.ast) {
+        useFreeParamStore.getState().setAST(parseResult.ast, parseResult.declarationName, parseResult.domainType);
       }
     } catch (err) {
-      console.error('[SymForge App] Transient parse error while synchronizing AST:', {
+      console.error('[SymForge App] Transient error while synchronizing AST to store:', {
         error: err,
         codeLength: leanCode.length,
         timestamp: Date.now(),
       });
     }
-  }, [leanCode]);
+  }, [parseResult, leanCode.length]);
+
+  // Resolve minimal enclosing AST node for current Monaco selection
+  const scopedMatch = useMemo<NodeMatchResult | null>(() => {
+    if (
+      !parseResult?.ast ||
+      !parseResult?.spans ||
+      !currentSelection ||
+      !currentSelection.selectedText ||
+      currentSelection.selectedText.length === 0
+    ) {
+      return null;
+    }
+    const selectionRange = computeSelectionRange(currentSelection, leanCode);
+    return findEnclosingASTNode(parseResult.ast, parseResult.spans, selectionRange, leanCode);
+  }, [parseResult, currentSelection, leanCode]);
+
+  // Active Scoped Selection badge text (e.g. 🎯 Scope: CylinderNode (child: b) [L5:12 - L5:48])
+  const scopedBadgeText = useMemo(() => {
+    if (!scopedMatch) return null;
+    const nodeName = formatNodeDisplayName(scopedMatch.targetNode);
+    const relationStr = scopedMatch.parentRelation ? `child: ${scopedMatch.parentRelation}` : 'root';
+    return `🎯 Scope: ${nodeName} (${relationStr}) [L${scopedMatch.span.startLine}:${scopedMatch.span.startCol} - L${scopedMatch.span.endLine}:${scopedMatch.span.endCol}]`;
+  }, [scopedMatch]);
 
   const ast = useFreeParamStore((state) => state.ast);
   const paramOrder = useFreeParamStore((state) => state.paramOrder);
@@ -147,7 +188,36 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
         <section className="editor-panel" aria-label="Lean 4 Editor Panel">
           <div className="panel-header">
             <span>Editor: SymforgeIr/Gyroid.lean</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {scopedBadgeText && (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--accent-amber, #fbbf24)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    fontWeight: 500,
+                  }}
+                  data-testid="scoped-selection-badge"
+                  title={`Enclosing Declaration: ${scopedMatch?.enclosingDeclaration || 'anonymous'}`}
+                >
+                  {scopedBadgeText}
+                </span>
+              )}
+              {scopedMatch && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={handleGenerateVariations}
+                  data-testid="editor-generate-variations-btn"
+                  title="Generate Variations for Scoped Selection"
+                  style={{ padding: '2px 8px', fontSize: '0.72rem' }}
+                >
+                  ⚡ Generate Variations
+                </button>
+              )}
               {currentSelection && currentSelection.selectedText.length > 0 && (
                 <span
                   style={{

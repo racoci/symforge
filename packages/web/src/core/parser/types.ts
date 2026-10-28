@@ -39,6 +39,7 @@ export interface ParseResult {
   readonly spans: Map<string, SourceSpan>;
   readonly errors: ParseError[];
   readonly nodeSpanMap?: WeakMap<object, SourceSpan>;
+  readonly nodeIdMap?: WeakMap<object, string>;
 }
 
 /**

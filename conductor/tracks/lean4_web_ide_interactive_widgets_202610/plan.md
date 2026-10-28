@@ -192,7 +192,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
 
 Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (`Hole[T]`), structural context extraction $(\text{Parent}, \text{Grandparent}, \text{LeftSibling})$, off-thread contextual PCFG/PHOG sampling across complexity tiers $L_1 \dots L_5$, and the interactive visual gallery with 1-click code injection.
 
-- [ ] Task 3.1: Selection Bounding & Monaco Range-to-AST Node Mapper
+- [x] Task 3.1: Selection Bounding & Monaco Range-to-AST Node Mapper
   - **Objective:** Implement Monaco cursor selection listener and AST source range mapper that resolves the minimal syntactically complete AST subtree $N_{\text{target}}$ corresponding to the user's highlighted text.
   - **Bottleneck Mitigation:** Binary search over AST source span intervals with syntax boundary expansion for partial selections.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/generator/selectionMapper.test.ts`

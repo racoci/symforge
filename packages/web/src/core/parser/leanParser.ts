@@ -371,9 +371,11 @@ function parseParamArgument(state: ParserState, nameHint: string): FreeParam {
 
 function parseNodeArgument(state: ParserState): any {
   if (match(state, 'Delimiter', '(')) {
-    consume(state);
+    const openTok = consume(state);
     const inner = parseExpression(state);
-    expect(state, 'Delimiter', ')');
+    const closeTok = expect(state, 'Delimiter', ')');
+    const span = combineSpans(openTok.span, closeTok.span);
+    recordSpan(state, inner, span);
     return inner;
   }
   if (match(state, 'Identifier')) {
@@ -820,6 +822,12 @@ export function parseLeanCode(source: string): ParseResult {
     state.spans.set('root', combineSpans(firstTok.span, lastNonEof.span));
   }
 
+  // Attach metadata to spans map for convenience
+  (state.spans as any).nodeSpanMap = state.nodeToSpanMap;
+  (state.spans as any).nodeIdMap = state.nodeToIdMap;
+  (state.spans as any).declarationName = declarationName;
+  (state.spans as any).domainType = domainType;
+
   return {
     declarationName,
     domainType,
@@ -827,6 +835,7 @@ export function parseLeanCode(source: string): ParseResult {
     spans: state.spans,
     errors: state.errors,
     nodeSpanMap: state.nodeToSpanMap,
+    nodeIdMap: state.nodeToIdMap,
   };
 }
 
@@ -852,6 +861,20 @@ export function getNodeSpan(node: ASTNode, result: ParseResult): SourceSpan | un
   }
   if ('holeId' in node && result.spans.has((node as any).holeId)) {
     return result.spans.get((node as any).holeId);
+  }
+  return undefined;
+}
+
+/**
+ * Retrieve the unique identifier of an AST node from the parse result.
+ */
+export function getNodeId(node: ASTNode, result: ParseResult): string | undefined {
+  if (!node) return undefined;
+  if (result.nodeIdMap?.has(node)) {
+    return result.nodeIdMap.get(node);
+  }
+  if ('holeId' in node) {
+    return (node as any).holeId;
   }
   return undefined;
 }
