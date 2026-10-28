@@ -12,7 +12,7 @@ import type {
 import { SDFRaymarchWidget } from './sdf/SDFRaymarchWidget';
 import { AudioDSPWidget } from './audio';
 import { HyperdimPlotterWidget } from './hyperdim';
-import { HardwareTimelineWidget } from './DefaultDomainWidgets';
+import { HardwarePipelineWidget } from './hardware';
 import { GenericASTWidget } from './GenericASTWidget';
 
 type WidgetChangeListener = (widgets: DomainWidgetDefinition[]) => void;
@@ -46,7 +46,7 @@ export function createDefaultWidgetDefinitions(): DomainWidgetDefinition[] {
       domain: 'hardware',
       description: 'Register dependency DAG and hardware pipeline execution timeline.',
       canHandle: (ast: ASTNode): boolean => isHardwareNode(ast),
-      component: HardwareTimelineWidget,
+      component: HardwarePipelineWidget,
       priority: 100,
     },
     {

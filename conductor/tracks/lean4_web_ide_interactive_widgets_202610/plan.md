@@ -171,7 +171,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/hyperdimensional_function_plotter.md`
   - **Pass-to-Complete Gate:** Evaluates $100 \times 100$ grid points across 5 dimensions in $< 15$ ms.
 
-- [ ] Task 2.6: Hardware Instruction Sequence Visualizer & Register Pipeline Timeline
+- [x] Task 2.6: Hardware Instruction Sequence Visualizer & Register Pipeline Timeline
   - **Objective:** Implement the visualizer for `HardwareNode` sequences, rendering an interactive directed acyclic register dependency DAG, cycle execution Gantt chart, and register allocation state inspector.
   - **Bottleneck Mitigation:** Pure SVG / Canvas rendering with topological cycle ordering.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/hardware/hardwarePipeline.test.ts`
