@@ -155,7 +155,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
   - **Documentation Artifact:** `docs/architecture/sdf_uniform_binding.md`
   - **Pass-to-Complete Gate:** Uniform binding updates 10 simultaneous parameters with zero dropped frames.
 
-- [x] Task 2.4: WebAudio DSP Synthesis Widget for `AudioNode` (Oscilloscope & Live FFT Spectrogram)
+- [x] Task 2.4: WebAudio DSP Synthesis Widget for `AudioNode` (Oscilloscope & Live FFT Spectrogram) [d72206d]
   - **Objective:** Implement the procedural WebAudio / AudioWorklet synthesis engine transpiling `AudioNode` into a functional audio graph with Play/Pause, Loop, and Gate controls, driving a live time-domain canvas oscilloscope and 2048-point logarithmic FFT waterfall spectrogram.
   - **Bottleneck Mitigation:** Dual-tap audio graph: uncompressed dry signal feeds the FFT visualization, while speaker destination is protected by a dynamics compressor and soft limiter.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/widgets/audio/audioGraphCompiler.test.ts`
