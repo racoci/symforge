@@ -188,11 +188,11 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
 
 ---
 
-## Phase 3: In-Context Scoped Variation Generator
+## Phase 3: In-Context Scoped Variation Generator [checkpoint: 3a555b1]
 
 Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (`Hole[T]`), structural context extraction $(\text{Parent}, \text{Grandparent}, \text{LeftSibling})$, off-thread contextual PCFG/PHOG sampling across complexity tiers $L_1 \dots L_5$, and the interactive visual gallery with 1-click code injection.
 
-- [x] Task 3.1: Selection Bounding & Monaco Range-to-AST Node Mapper
+- [x] Task 3.1: Selection Bounding & Monaco Range-to-AST Node Mapper [f140f4d]
   - **Objective:** Implement Monaco cursor selection listener and AST source range mapper that resolves the minimal syntactically complete AST subtree $N_{\text{target}}$ corresponding to the user's highlighted text.
   - **Bottleneck Mitigation:** Binary search over AST source span intervals with syntax boundary expansion for partial selections.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/generator/selectionMapper.test.ts`
@@ -200,7 +200,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/scoped_selection_mapper.md`
   - **Pass-to-Complete Gate:** 100% correct node identification across 50 simulated user selection ranges.
 
-- [x] Task 3.2: Type Resolution, Hole Puncturing (`Hole[T]`) & Structural Context Extractor
+- [x] Task 3.2: Type Resolution, Hole Puncturing (`Hole[T]`) & Structural Context Extractor [e5b0e06]
   - **Objective:** Implement AST hole puncturing that replaces $N_{\text{target}}$ with a typed placeholder `HoleNode(id, type, inputs)` and extracts the structural context tuple $\mathcal{C} = (\text{Parent}, \text{Grandparent}, \text{LeftSibling}, \text{Depth})$.
   - **Bottleneck Mitigation:** Immutable AST cloning ensures the active editor document remains untouched during analysis.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/generator/holePuncturing.test.ts`
@@ -208,7 +208,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/hole_puncturing_context.md`
   - **Pass-to-Complete Gate:** Correctly punctures holes and extracts contexts across 30 varied AST subtrees.
 
-- [x] Task 3.3: Client-Side Contextual PCFG/PHOG Sampler ($L_1 \dots L_5$ Stratification)
+- [x] Task 3.3: Client-Side Contextual PCFG/PHOG Sampler ($L_1 \dots L_5$ Stratification) [3561732]
   - **Objective:** Implement the client-side probabilistic grammar sampler generating $K$ independent typed variations preserving the target input/output type signature, stratified across 5 complexity levels ($L_1$: Atomic, $L_2$: Unary Transform, $L_3$: Binary Combinator, $L_4$: Hierarchical, $L_5$: Structural Abstraction).
   - **Bottleneck Mitigation:** Strict derivation depth cap ($D \le 6$) and type-directed production pruning prevent infinite loops and invalid programs.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/core/pcfg/pcfgSampler.test.ts`
@@ -216,7 +216,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/contextual_pcfg_sampler.md`
   - **Pass-to-Complete Gate:** Samples 100 valid variations with 0 type violations and 0 infinite recursion occurrences.
 
-- [x] Task 3.4: Background Web Worker for Non-Blocking Variation Generation & Semantic Deduplication [4a4e705]
+- [x] Task 3.4: Background Web Worker for Non-Blocking Variation Generation & Semantic Deduplication [5b6f591]
   - **Objective:** Encapsulate PCFG sampling and semantic deduplication inside a dedicated Web Worker (`variation.worker.ts`), equipped with `AbortController` and request sequence IDs to eliminate UI stalls and race conditions during rapid text selection.
   - **Bottleneck Mitigation:** Offloads CPU-intensive stochastic derivation from the main render thread; cancels stale jobs immediately upon new selection.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/workers/variationWorker.test.ts`
@@ -224,7 +224,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/variation_web_worker.md`
   - **Pass-to-Complete Gate:** Worker returns 8 unique, deduplicated variations in $< 100$ ms without blocking the main UI thread.
 
-- [x] Task 3.5: Interactive Visual Variation Gallery & 1-Click Code Injection
+- [x] Task 3.5: Interactive Visual Variation Gallery & 1-Click Code Injection [cf7f9af]
   - **Objective:** Build the responsive side drawer displaying live 3D WebGL / Audio waveform thumbnail cards for each candidate variation, with complexity tier filtering and 1-click code injection that updates Monaco via `executeEdits` with full undo/redo history.
   - **Bottleneck Mitigation:** Offscreen canvas rendering with lightweight thumbnails; atomic Monaco edit transaction.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/gallery/variationGallery.test.tsx`
@@ -232,7 +232,12 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/visual_variation_gallery.md`
   - **Pass-to-Complete Gate:** 1-click injection correctly updates Monaco editor document and enables `Ctrl+Z` undo to original state.
 
-- [ ] Task 3.6: Phase 3 Verification & Checkpoint (Refer to workflow.md)
+- [x] Task 3.6: Phase 3 Verification & Checkpoint (Refer to workflow.md) [3a555b1]
+  - **Objective:** Execute comprehensive multi-tier test suite verification across web, python, and lean packages, build production bundles, assert static architectural compliance with zero violations, perform recursive risk analysis, and establish Phase 3 checkpoint.
+  - **Automated Test Definition:** `npm --prefix packages/web test -- run && npm --prefix packages/web run build && .venv/bin/pytest -q tests/ && packages/lean/symforge_ir/lake build && python3 /home/racoci/.gemini/skills/code-guard-validator/scripts/validate_rules.py .`
+    - Invariants: 100% test pass rate across all tiers, 0 build errors, 0 architectural violations.
+  - **Documentation Artifact:** `docs/architecture/phase3_checkpoint_verification.md`
+  - **Pass-to-Complete Gate:** 360/360 web tests pass, 352/352 python tests pass, lake builds 12 jobs, and 0 code guard violations.
 
 ---
 
@@ -457,5 +462,124 @@ graph TD
         P3R3_5 --> P3M3_5["Mitigation: Retain keyboard focus in Monaco with Alt+1..5 hotkeys"]
         P3M3_5 --> P3R3_6["Depth 6: Alt-key collisions on Linux/Windows desktop managers<br/>Low Likelihood"]
         P3R3_6 --> P3T3["Branch Terminated: Depth 6 / Low Likelihood"]
+    end
+```
+
+### Phase 4 Transition Recursive Risk Analysis (Tasks 4.1 - 4.6)
+
+```text
++-------------------------------------------------------------------------------------------------------------------------+
+|                                    PHASE 4 RECURSIVE RISK & MITIGATION ARCHITECTURE                                     |
+|                                                                                                                         |
+| [Depth 1] Subpath Base URL Mismatch & SPA 404 Routing on GitHub Pages (High Likelihood)                                 |
+|   `--> Mitigation: Configure Vite base: './' with relative asset links + custom 404.html SPA redirect trick             |
+|         `--> [Depth 2] Relative base paths break Web Worker & Monaco Environment loaders on subpaths (Medium)           |
+|               `--> Mitigation: Instantiate workers via new URL(..., import.meta.url) & set Monaco getWorkerUrl          |
+|                     `--> [Depth 3] CSP or Cross-Origin rules on GitHub Pages block Blob/Data URI workers (Medium)       |
+|                           `--> Mitigation: Rollup manualChunks configuration emitting discrete static worker chunks      |
+|                                 `--> [Depth 4] Discrete chunks incur multiple sequential HTTP roundtrips on cold boot   |
+|                                       `--> Mitigation: Inject <link rel="modulepreload"> tags for worker & vendor chunks|
+|                                             `--> [Depth 5] Preloading triggers cache over-invalidation on single update |
+|                                                   `--> Mitigation: Partition vendor chunks into deterministic bundles   |
+|                                                         `--> [Depth 6] Stale vendor chunks in browser cache             |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+| [Depth 1] GitHub Actions CI Concurrency Race Conditions & Missing Pages Permissions (High Likelihood)                   |
+|   `--> Mitigation: Explicit concurrency group + minimal permissions (contents: read, pages: write, id-token: write)     |
+|         `--> [Depth 2] cancel-in-progress: true aborts active upload-pages-artifact, corrupting deployment (Medium)     |
+|               `--> Mitigation: Decouple workflow into build (cancelable) and atomic deploy (serialized lock) jobs      |
+|                     `--> [Depth 3] Build failures in pull requests trigger false deployment alerts (Medium)             |
+|                           `--> Mitigation: Add strict environment targeting & if: github.ref == 'refs/heads/main' guard |
+|                                 `--> [Depth 4] Node.js version drift or uncommitted lockfile breaks headless CI build   |
+|                                       `--> Mitigation: Enforce npm ci with fixed Node.js LTS version (node-version: 22) |
+|                                             `--> [Depth 5] Cache corruption in actions/setup-node causes transient fail |
+|                                                   `--> Mitigation: Set explicit cache-dependency-path & step retries    |
+|                                                         `--> [Depth 6] Transient GitHub Pages platform DNS propagation  |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+| [Depth 1] Service Worker Aggressively Caches Stale App Shell Assets ("Zombie Worker") (High Likelihood)                 |
+|   `--> Mitigation: Stale-While-Revalidate caching for app shell + user notification banner with skipWaiting()           |
+|         `--> [Depth 2] Automatic skipWaiting() reloads page while user edits code, discarding AST state (Medium)        |
+|               `--> Mitigation: Defer reload until user clicks update banner + auto-save in-memory text to localStorage |
+|                     `--> [Depth 3] Browser storage quota limits (50MB cap) throw QuotaExceededError during cache (Medium)|
+|                           `--> Mitigation: Wrap cache storage in quota-bounded LRU eviction policy (max 25MB cap)       |
+|                                 `--> [Depth 4] LRU cache evicts core Monaco/Three.js assets causing offline glitch (Med)|
+|                                       `--> Mitigation: Two-tier cache: immutable core-static vs evictable dynamic-cache |
+|                                             `--> [Depth 5] Service Worker registration fails in headless Playwright CI  |
+|                                                   `--> Mitigation: Guard registration behind HTTPS & environment flag   |
+|                                                         `--> [Depth 6] PWA install banner timing differences across OS  |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+| [Depth 1] Headless Playwright Browser Crashes / Fails WebGL Initialization in GPU-less CI (High Likelihood)             |
+|   `--> Mitigation: Launch Chromium with --use-gl=angle, --use-angle=swiftshader, --enable-webgl flags                   |
+|         `--> [Depth 2] Software SwiftShader WebGL runs at low FPS causing Playwright assertion timeouts (Medium)        |
+|               `--> Mitigation: Increase test timeout limits to 15s + use explicit toBeVisible state checks              |
+|                     `--> [Depth 3] WebAudio API headless mode blocks unmuted audio contexts without audio output (Med)  |
+|                           `--> Mitigation: Inject WebAudio mock harness in Playwright test environment                  |
+|                                 `--> [Depth 4] Mocked WebAudio diverges from real browser audio thread behavior (Medium)|
+|                                       `--> Mitigation: Dual-mode tests: Vitest contract tests + Playwright smoke checks |
+|                                             `--> [Depth 5] Monolithic Playwright test runs trigger CI runner OOM killer |
+|                                                   `--> Mitigation: Configure workers: 1 in CI with 4GB Node memory cap  |
+|                                                         `--> [Depth 6] Minor font rendering discrepancies across OS     |
+|                                                               `--> Branch Terminated (Depth 6 / Low Likelihood)         |
++-------------------------------------------------------------------------------------------------------------------------+
+```
+
+```mermaid
+graph TD
+    subgraph P4Branch1 [Branch 1: Static Hosting Routing & Asset Resolution]
+        P4R1_1["Depth 1: Subpath Base URL Mismatch & SPA 404 Routing on GitHub Pages<br/>High Likelihood"] --> P4M1_1["Mitigation: Vite base: './' + 404.html SPA redirect trick"]
+        P4M1_1 --> P4R1_2["Depth 2: Relative paths break Web Worker & Monaco loaders on subpaths<br/>Medium Likelihood"]
+        P4R1_2 --> P4M1_2["Mitigation: new URL(..., import.meta.url) + Monaco getWorkerUrl"]
+        P4M1_2 --> P4R1_3["Depth 3: CSP or Cross-Origin rules block Blob/Data URI workers<br/>Medium Likelihood"]
+        P4R1_3 --> P4M1_3["Mitigation: Rollup manualChunks emitting discrete static worker chunks"]
+        P4M1_3 --> P4R1_4["Depth 4: Discrete chunks incur multiple HTTP roundtrips on cold boot<br/>Medium Likelihood"]
+        P4R1_4 --> P4M1_4["Mitigation: Inject modulepreload tags for worker and vendor chunks"]
+        P4M1_4 --> P4R1_5["Depth 5: Preloading triggers cache over-invalidation on single update<br/>Medium Likelihood"]
+        P4R1_5 --> P4M1_5["Mitigation: Partition vendor chunks into deterministic bundles"]
+        P4M1_5 --> P4R1_6["Depth 6: Stale vendor chunks in browser cache<br/>Low Likelihood"]
+        P4R1_6 --> P4T1["Branch Terminated: Depth 6 / Low Likelihood"]
+    end
+
+    subgraph P4Branch2 [Branch 2: GitHub Actions CI/CD Pipeline & Permissions]
+        P4R2_1["Depth 1: CI Concurrency Race Conditions & Missing Pages Permissions<br/>High Likelihood"] --> P4M2_1["Mitigation: Concurrency group + minimal pages: write permissions"]
+        P4M2_1 --> P4R2_2["Depth 2: cancel-in-progress: true aborts active upload-pages-artifact<br/>Medium Likelihood"]
+        P4R2_2 --> P4M2_2["Mitigation: Decouple workflow into build and atomic deploy jobs"]
+        P4M2_2 --> P4R2_3["Depth 3: Build failures in PRs trigger false deployment alerts<br/>Medium Likelihood"]
+        P4R2_3 --> P4M2_3["Mitigation: Environment targeting + if: github.ref == 'refs/heads/main'"]
+        P4M2_3 --> P4R2_4["Depth 4: Node.js version drift or uncommitted lockfile breaks CI<br/>Medium Likelihood"]
+        P4R2_4 --> P4M2_4["Mitigation: Enforce npm ci with fixed Node.js LTS (node-version: 22)"]
+        P4M2_4 --> P4R2_5["Depth 5: Cache corruption in setup-node causes transient failures<br/>Medium Likelihood"]
+        P4R2_5 --> P4M2_5["Mitigation: Set cache-dependency-path + step retries"]
+        P4M2_5 --> P4R2_6["Depth 6: Transient GitHub Pages DNS propagation latency<br/>Low Likelihood"]
+        P4R2_6 --> P4T2["Branch Terminated: Depth 6 / Low Likelihood"]
+    end
+
+    subgraph P4Branch3 [Branch 3: Service Worker Caching & Storage Quotas]
+        P4R3_1["Depth 1: Service Worker Aggressively Caches Stale Assets ('Zombie Worker')<br/>High Likelihood"] --> P4M3_1["Mitigation: Stale-While-Revalidate + user notification skipWaiting()"]
+        P4M3_1 --> P4R3_2["Depth 2: Automatic skipWaiting() reloads page while user edits code<br/>Medium Likelihood"]
+        P4R3_2 --> P4M3_2["Mitigation: Defer reload until user clicks banner + localStorage auto-save"]
+        P4M3_2 --> P4R3_3["Depth 3: Browser storage quota limits (50MB) throw QuotaExceededError<br/>Medium Likelihood"]
+        P4R3_3 --> P4M3_3["Mitigation: Quota-bounded LRU eviction policy (max 25MB cap)"]
+        P4M3_3 --> P4R3_4["Depth 4: LRU cache evicts core Monaco/Three.js assets causing offline glitch<br/>Medium Likelihood"]
+        P4R3_4 --> P4M3_4["Mitigation: Two-tier cache: immutable core-static vs evictable dynamic-cache"]
+        P4M3_4 --> P4R3_5["Depth 5: Service Worker registration fails in headless Playwright CI<br/>Medium Likelihood"]
+        P4R3_5 --> P4M3_5["Mitigation: Guard registration behind HTTPS and test environment flag"]
+        P4M3_5 --> P4R3_6["Depth 6: PWA install banner timing differences across OS<br/>Low Likelihood"]
+        P4R3_6 --> P4T3["Branch Terminated: Depth 6 / Low Likelihood"]
+    end
+
+    subgraph P4Branch4 [Branch 4: Headless Playwright & Virtualized GPU/Audio]
+        P4R4_1["Depth 1: Headless Chromium Crashes / Fails WebGL in GPU-less CI<br/>High Likelihood"] --> P4M4_1["Mitigation: Launch Chromium with SwiftShader software WebGL flags"]
+        P4M4_1 --> P4R4_2["Depth 2: Software SwiftShader runs at low FPS causing assertion timeouts<br/>Medium Likelihood"]
+        P4R4_2 --> P4M4_2["Mitigation: Increase timeouts to 15s + explicit toBeVisible state checks"]
+        P4M4_2 --> P4R4_3["Depth 3: WebAudio headless mode blocks unmuted audio contexts without audio device<br/>Medium Likelihood"]
+        P4R4_3 --> P4M4_3["Mitigation: Inject WebAudio mock harness in Playwright test environment"]
+        P4M4_3 --> P4R4_4["Depth 4: Mocked WebAudio diverges from real browser audio thread behavior<br/>Medium Likelihood"]
+        P4R4_4 --> P4M4_4["Mitigation: Dual-mode tests: Vitest contract tests + Playwright smoke checks"]
+        P4M4_4 --> P4R4_5["Depth 5: Monolithic Playwright test runs trigger CI runner OOM killer<br/>Medium Likelihood"]
+        P4R4_5 --> P4M4_5["Mitigation: Configure workers: 1 in CI with 4GB Node memory cap"]
+        P4R4_5 --> P4R4_6["Depth 6: Minor font rendering discrepancies across OS<br/>Low Likelihood"]
+        P4R4_6 --> P4T4["Branch Terminated: Depth 6 / Low Likelihood"]
     end
 ```
