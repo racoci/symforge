@@ -253,10 +253,10 @@ Focus: Vite production bundling, static asset optimization, GitHub Actions autom
   - **Documentation Artifact:** `docs/architecture/vite_bundle_optimization.md`
   - **Pass-to-Complete Gate:** Production build passes with zero warnings and generates valid `packages/web/dist/index.html`.
 
-- [ ] Task 4.2: Automated GitHub Actions CI/CD Deployment Workflow
+- [x] Task 4.2: Automated GitHub Actions CI/CD Deployment Workflow [eb88316]
   - **Objective:** Create `.github/workflows/deploy_web_ide.yml` to automatically build `packages/web` and deploy the static distribution to GitHub Pages on every push to `main`.
   - **Bottleneck Mitigation:** Uses official `actions/deploy-pages` and `actions/upload-pages-artifact` with zero external token requirements.
-  - **Automated Test Definition:** Static YAML linting and simulated workflow dry-run
+  - **Automated Test Definition:** `npm --prefix packages/web test -- src/test/workflowVerification.test.ts`
     - Invariants: Workflow syntax validates against GitHub Actions schema; build step executes `npm run build`; deploy step targets `gh-pages`.
   - **Documentation Artifact:** `docs/architecture/github_pages_deployment.md`
   - **Pass-to-Complete Gate:** GitHub Actions workflow file passes schema validation and correctly targets GitHub Pages environment.
