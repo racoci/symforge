@@ -245,10 +245,10 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
 
 Focus: Vite production bundling, static asset optimization, GitHub Actions automated deployment workflow (`.github/workflows/deploy_web_ide.yml`), PWA offline service worker caching, and headless browser smoke testing via Playwright.
 
-- [ ] Task 4.1: Production Bundling, Code Splitting & Vite GitHub Pages Configuration
+- [x] Task 4.1: Production Bundling, Code Splitting & Vite GitHub Pages Configuration [2ae0962]
   - **Objective:** Configure Vite build with `base: '/symforge/'` (or relative path `./`), Monaco editor web worker chunk splitting, Three.js tree shaking, and static asset minification.
   - **Bottleneck Mitigation:** Optimized chunk sizes with dynamic imports for heavy modules (Monaco workers, Three.js rendering loops).
-  - **Automated Test Definition:** `npm --prefix packages/web run build && ls -lh packages/web/dist`
+  - **Automated Test Definition:** `npm --prefix packages/web run build && npm --prefix packages/web test -- src/test/bundleVerification.test.ts`
     - Invariants: Total initial bundle size $< 2.5$ MB gzipped; zero broken asset references; valid relative asset URLs.
   - **Documentation Artifact:** `docs/architecture/vite_bundle_optimization.md`
   - **Pass-to-Complete Gate:** Production build passes with zero warnings and generates valid `packages/web/dist/index.html`.
