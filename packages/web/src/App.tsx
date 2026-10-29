@@ -1,9 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { LeanEditor, type LeanSelection } from './components/editor/LeanEditor';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import {
+  LeanEditor,
+  type LeanSelection,
+  type LeanEditorHandle,
+} from './components/editor/LeanEditor';
 import { ParameterInspector } from './components/inspector/ParameterInspector';
 import { ViewportShell } from './components/widgets';
+import { VariationGallery } from './components/gallery';
 import { useFreeParamStore } from './core/store/freeParamStore';
-import { parseLeanCode } from './core/parser/leanParser';
+import { parseLeanCode, getNodeId, getNodeSpan } from './core/parser/leanParser';
 import { getNodeCount } from './core/ast/models';
 import {
   findEnclosingASTNode,
@@ -11,6 +16,10 @@ import {
   formatNodeDisplayName,
   type NodeMatchResult,
 } from './core/generator';
+import { punctureASTHole } from './core/generator/holePuncturing';
+import type { PunctureResult } from './core/generator/types';
+import type { CurriculumLevel, VariationCandidate } from './core/pcfg/types';
+import { VariationWorkerClient } from './workers/variationWorkerClient';
 
 export interface AppProps {
   initialDomain?: 'sdf' | 'audio' | 'plotter' | 'hardware';
@@ -55,6 +64,23 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
   const [variationCount, setVariationCount] = useState<number>(0);
   const [currentSelection, setCurrentSelection] = useState<LeanSelection | null>(null);
   const [isInspectorCollapsed, setIsInspectorCollapsed] = useState<boolean>(false);
+
+  // Variation Gallery State
+  const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
+  const [galleryCandidates, setGalleryCandidates] = useState<VariationCandidate[]>([]);
+  const [isGalleryLoading, setIsGalleryLoading] = useState<boolean>(false);
+  const [galleryError, setGalleryError] = useState<string | null>(null);
+  const [activePunctureResult, setActivePunctureResult] = useState<PunctureResult | null>(null);
+  const [selectedGalleryLevel, setSelectedGalleryLevel] = useState<CurriculumLevel | 'ALL'>('ALL');
+
+  const editorRef = useRef<LeanEditorHandle>(null);
+  const workerClientRef = useRef<VariationWorkerClient | null>(null);
+
+  if (!workerClientRef.current) {
+    workerClientRef.current = new VariationWorkerClient({
+      timeoutMs: 3000,
+    });
+  }
 
   const [leanCode, setLeanCode] = useState<string>(DOMAIN_PRESETS[initialDomain] || DOMAIN_PRESETS.sdf);
 
@@ -116,9 +142,94 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
   const nodeCount = useMemo(() => (ast ? getNodeCount(ast) : 0), [ast]);
   const paramCount = paramOrder.length;
 
-  const handleGenerateVariations = () => {
+  const handleGenerateVariations = useCallback(async () => {
     setVariationCount((prev) => prev + 1);
-  };
+
+    if (!parseResult?.ast) {
+      console.warn('[SymForge App] Cannot generate variations: AST is null');
+      return;
+    }
+
+    // Resolve target match: user's highlighted scope or fallback to root node
+    let targetMatch = scopedMatch;
+    if (!targetMatch) {
+      const rootId = getNodeId(parseResult.ast, parseResult) || 'root';
+      const rootSpan = getNodeSpan(parseResult.ast, parseResult) || {
+        startLine: 1,
+        startCol: 1,
+        endLine: leanCode.split('\n').length,
+        endCol: (leanCode.split('\n').pop()?.length || 0) + 1,
+        startOffset: 0,
+        endOffset: leanCode.length,
+      };
+      targetMatch = {
+        targetNode: parseResult.ast,
+        nodeId: rootId,
+        nodePath: [],
+        span: rootSpan,
+        isExactMatch: true,
+        overlapRatio: 1.0,
+        parentNode: null,
+        parentRelation: null,
+        enclosingDeclaration: parseResult.declarationName,
+      };
+    }
+
+    try {
+      const punc = punctureASTHole(parseResult.ast, targetMatch);
+      setActivePunctureResult(punc);
+      setIsGalleryOpen(true);
+      setIsGalleryLoading(true);
+      setGalleryError(null);
+
+      const client = workerClientRef.current || new VariationWorkerClient();
+      const result = await client.generateVariations(punc); // with timeout guardrail
+      setGalleryCandidates(result.candidates);
+    } catch (err: any) {
+      console.error('[SymForge App] Error generating variations:', err);
+      setGalleryError(err?.message || 'Failed to synthesize variations');
+    } finally {
+      setIsGalleryLoading(false);
+    }
+  }, [parseResult, scopedMatch, leanCode]);
+
+  const handleRegenerateVariations = useCallback(async () => {
+    if (!activePunctureResult) return;
+    setIsGalleryLoading(true);
+    setGalleryError(null);
+
+    try {
+      const client = workerClientRef.current || new VariationWorkerClient();
+      const result = await client.generateVariations(activePunctureResult, { // with timeout guardrail
+        seed: Math.floor(Math.random() * 1000000),
+      });
+      setGalleryCandidates(result.candidates);
+    } catch (err: any) {
+      console.error('[SymForge App] Error regenerating variations:', err);
+      setGalleryError(err?.message || 'Failed to regenerate variations');
+    } finally {
+      setIsGalleryLoading(false);
+    }
+  }, [activePunctureResult]);
+
+  const handleInjectVariation = useCallback(
+    (candidate: VariationCandidate) => {
+      if (!activePunctureResult) {
+        console.warn('[SymForge App] Cannot inject variation: No active puncture result');
+        return;
+      }
+
+      const success = editorRef.current?.injectCodeAtSpan(
+        activePunctureResult.targetSpan,
+        candidate.leanCode
+      );
+
+      if (success) {
+        setIsGalleryOpen(false);
+      }
+    },
+    [activePunctureResult]
+  );
 
   const handleDomainTabClick = (domain: 'sdf' | 'audio' | 'plotter' | 'hardware') => {
     setActiveDomain(domain);
@@ -237,6 +348,7 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
           </div>
           <div className="panel-body">
             <LeanEditor
+              ref={editorRef}
               value={leanCode}
               onChange={setLeanCode}
               onSelectionChange={setCurrentSelection}
@@ -259,6 +371,20 @@ export const App: React.FC<AppProps> = ({ initialDomain = 'sdf' }) => {
           dataTestId="parameter-inspector"
         />
       </main>
+
+      {/* Interactive Visual Variation Gallery Sliding Drawer */}
+      <VariationGallery
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        candidates={galleryCandidates}
+        isLoading={isGalleryLoading}
+        error={galleryError}
+        punctureResult={activePunctureResult}
+        selectedLevel={selectedGalleryLevel}
+        onSelectLevel={setSelectedGalleryLevel}
+        onRegenerate={handleRegenerateVariations}
+        onInjectVariation={handleInjectVariation}
+      />
 
       {/* Bottom Status Bar */}
       <footer className="status-bar" data-testid="app-status-bar">

@@ -224,10 +224,10 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/variation_web_worker.md`
   - **Pass-to-Complete Gate:** Worker returns 8 unique, deduplicated variations in $< 100$ ms without blocking the main UI thread.
 
-- [ ] Task 3.5: Interactive Visual Variation Gallery & 1-Click Code Injection
+- [x] Task 3.5: Interactive Visual Variation Gallery & 1-Click Code Injection
   - **Objective:** Build the responsive side drawer displaying live 3D WebGL / Audio waveform thumbnail cards for each candidate variation, with complexity tier filtering and 1-click code injection that updates Monaco via `executeEdits` with full undo/redo history.
   - **Bottleneck Mitigation:** Offscreen canvas rendering with lightweight thumbnails; atomic Monaco edit transaction.
-  - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/gallery/variationGallery.test.ts`
+  - **Automated Test Definition:** `npm --prefix packages/web test -- src/components/gallery/variationGallery.test.tsx`
     - Invariants: Gallery renders $K$ cards with correct complexity badges; clicking candidate replaces selected text range with formatted Lean 4 code.
   - **Documentation Artifact:** `docs/architecture/visual_variation_gallery.md`
   - **Pass-to-Complete Gate:** 1-click injection correctly updates Monaco editor document and enables `Ctrl+Z` undo to original state.
