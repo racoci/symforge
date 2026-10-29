@@ -188,7 +188,7 @@ Focus: Building the extensible `DomainWidgetRegistry` and the three domain viewp
 
 ---
 
-## Phase 3: In-Context Scoped Variation Generator [checkpoint: 3a555b1]
+## Phase 3: In-Context Scoped Variation Generator [checkpoint: 74f5c3a]
 
 Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (`Hole[T]`), structural context extraction $(\text{Parent}, \text{Grandparent}, \text{LeftSibling})$, off-thread contextual PCFG/PHOG sampling across complexity tiers $L_1 \dots L_5$, and the interactive visual gallery with 1-click code injection.
 
@@ -232,7 +232,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/visual_variation_gallery.md`
   - **Pass-to-Complete Gate:** 1-click injection correctly updates Monaco editor document and enables `Ctrl+Z` undo to original state.
 
-- [x] Task 3.6: Phase 3 Verification & Checkpoint (Refer to workflow.md) [3a555b1]
+- [x] Task 3.6: Phase 3 Verification & Checkpoint (Refer to workflow.md) [74f5c3a]
   - **Objective:** Execute comprehensive multi-tier test suite verification across web, python, and lean packages, build production bundles, assert static architectural compliance with zero violations, perform recursive risk analysis, and establish Phase 3 checkpoint.
   - **Automated Test Definition:** `npm --prefix packages/web test -- run && npm --prefix packages/web run build && .venv/bin/pytest -q tests/ && packages/lean/symforge_ir/lake build && python3 /home/racoci/.gemini/skills/code-guard-validator/scripts/validate_rules.py .`
     - Invariants: 100% test pass rate across all tiers, 0 build errors, 0 architectural violations.

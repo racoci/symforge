@@ -355,7 +355,7 @@ graph TD
 | **Task 3.3** | Client-Side Contextual PCFG/PHOG Sampler ($L_1 \dots L_5$) | `docs/architecture/contextual_pcfg_sampler.md` | `3561732` |
 | **Task 3.4** | Background Web Worker & Semantic Deduplication Engine | `docs/architecture/variation_web_worker.md` | `5b6f591` |
 | **Task 3.5** | Interactive Visual Variation Gallery & 1-Click Code Injection | `docs/architecture/visual_variation_gallery.md` | `cf7f9af` |
-| **Task 3.6** | Phase 3 Verification & Checkpoint | `docs/architecture/phase3_checkpoint_verification.md` | `3a555b1` |
+| **Task 3.6** | Phase 3 Verification & Checkpoint | `docs/architecture/phase3_checkpoint_verification.md` | `74f5c3a` |
 
 ---
 
