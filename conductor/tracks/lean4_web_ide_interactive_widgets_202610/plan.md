@@ -216,7 +216,7 @@ Focus: Selection bounding in Monaco Editor, AST range mapping, hole puncturing (
   - **Documentation Artifact:** `docs/architecture/contextual_pcfg_sampler.md`
   - **Pass-to-Complete Gate:** Samples 100 valid variations with 0 type violations and 0 infinite recursion occurrences.
 
-- [ ] Task 3.4: Background Web Worker for Non-Blocking Variation Generation & Semantic Deduplication
+- [x] Task 3.4: Background Web Worker for Non-Blocking Variation Generation & Semantic Deduplication [4a4e705]
   - **Objective:** Encapsulate PCFG sampling and semantic deduplication inside a dedicated Web Worker (`variation.worker.ts`), equipped with `AbortController` and request sequence IDs to eliminate UI stalls and race conditions during rapid text selection.
   - **Bottleneck Mitigation:** Offloads CPU-intensive stochastic derivation from the main render thread; cancels stale jobs immediately upon new selection.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/workers/variationWorker.test.ts`
