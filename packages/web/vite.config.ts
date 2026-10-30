@@ -27,11 +27,8 @@ function gitHubPagesSpaFallback(): Plugin {
   };
 }
 
-const rawBase = process.env.VITE_BASE_PATH;
-const resolvedBase = rawBase ? (rawBase.endsWith('/') ? rawBase : `${rawBase}/`) : './';
-
 export default defineConfig({
-  base: resolvedBase,
+  base: './',
   plugins: [react(), gitHubPagesSpaFallback()],
   build: {
     chunkSizeWarningLimit: 1000,

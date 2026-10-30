@@ -33,7 +33,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry',
   },
   projects: [
@@ -54,9 +54,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run preview -- --port 4173',
+    command: 'npm run preview -- --port 4173 --host 127.0.0.1',
     port: 4173,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 30_000,
   },
 });
