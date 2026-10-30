@@ -212,7 +212,15 @@ function parseExplicitFreeParam(state: ParserState, startSpan: SourceSpan): Free
     maxVal = n2.val;
     if (match(state, 'Number') || match(state, 'Operator', '-')) {
       const n3 = parseNumberValue(state);
-      defaultVal = n3.val;
+      if (n1.val > n2.val && n3.val >= n2.val) {
+        // Support (FreeParam.mk id defaultVal minVal maxVal)
+        defaultVal = n1.val;
+        minVal = n2.val;
+        maxVal = n3.val;
+      } else {
+        // Standard (FreeParam.mk id minVal maxVal defaultVal)
+        defaultVal = n3.val;
+      }
     }
   }
 
@@ -241,7 +249,15 @@ function parseAnonymousParam(state: ParserState): FreeParam {
   if (match(state, 'Delimiter', ',')) consume(state);
 
   const endTok = expect(state, 'Delimiter', '⟩');
-  const param = createFreeParam(id, n1.val, n2.val, n3.val);
+  let minVal = n1.val;
+  let maxVal = n2.val;
+  let defaultVal = n3.val;
+  if (n1.val > n2.val && n3.val >= n2.val) {
+    defaultVal = n1.val;
+    minVal = n2.val;
+    maxVal = n3.val;
+  }
+  const param = createFreeParam(id, minVal, maxVal, defaultVal);
   const span = combineSpans(startTok.span, endTok.span);
   recordSpan(state, param, span, param.id);
   state.spans.set(`param:${param.id}`, span);

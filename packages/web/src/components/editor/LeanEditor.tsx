@@ -142,6 +142,10 @@ export const LeanEditor = forwardRef<LeanEditorHandle, LeanEditorProps>(
         editorRef.current = editorInstance;
         monacoRef.current = monaco;
 
+        if (typeof window !== 'undefined') {
+          (window as any).__monacoEditor = editorInstance;
+        }
+
         // Clean up previous listener if any
         if (selectionDisposableRef.current) {
           selectionDisposableRef.current.dispose();
@@ -291,6 +295,9 @@ export const LeanEditor = forwardRef<LeanEditorHandle, LeanEditorProps>(
           selectionDisposableRef.current.dispose();
           selectionDisposableRef.current = null;
         }
+        if (typeof window !== 'undefined' && (window as any).__monacoEditor === editorRef.current) {
+          delete (window as any).__monacoEditor;
+        }
       };
     }, []);
 
@@ -352,11 +359,12 @@ export const LeanEditor = forwardRef<LeanEditorHandle, LeanEditorProps>(
           {value}
         </div>
 
-        {/* Hidden button enabling selection simulation in testing environments */}
-        {process.env.NODE_ENV === 'test' && onSelectionChange && (
+        {/* DOM fixture enabling deterministic selection simulation in testing and E2E environments */}
+        {onSelectionChange && (
           <button
             type="button"
             style={{ display: 'none' }}
+            aria-hidden="true"
             data-testid="simulate-selection-btn"
             onClick={() => {
               onSelectionChange({

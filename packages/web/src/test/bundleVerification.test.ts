@@ -49,7 +49,7 @@ describe('Task 4.1: Production Bundling, Code Splitting & GitHub Pages Hosting',
 
     const htmlContent = fs.readFileSync(indexPath, 'utf-8');
     expect(htmlContent).toContain('<!DOCTYPE html>');
-    expect(htmlContent).toContain('<title>SymForge - Lean 4 Interactive Web IDE</title>');
+    expect(htmlContent).toContain('<title>SymForge Lean 4 Web IDE</title>');
     expect(htmlContent).toContain('<div id="root"></div>');
     expect(htmlContent).toMatch(/<script type="module" crossorigin src="[^"]*assets\/index-[^"]+\.js"><\/script>/);
   });

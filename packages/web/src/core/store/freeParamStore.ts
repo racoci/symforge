@@ -253,3 +253,7 @@ export function createFreeParamStore(initialAst: ASTNode | null = null): FreePar
  * Singleton reactive store for active Lean 4 IDE FreeParam state.
  */
 export const useFreeParamStore = createFreeParamStore();
+
+if (typeof window !== 'undefined') {
+  (window as any).__freeParamStore = useFreeParamStore;
+}

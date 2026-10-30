@@ -55,6 +55,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     pool: 'threads',
+    include: ['src/**/*.test.{ts,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
   },
   server: {
     port: 3000,

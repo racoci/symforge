@@ -61,6 +61,8 @@ venv.bak/
 .ipynb_checkpoints
 
 # Testing & Coverage
+test-results/
+playwright-report/
 .tox/
 .nox/
 .coverage

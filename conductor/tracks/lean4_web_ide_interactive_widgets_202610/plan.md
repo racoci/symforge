@@ -269,7 +269,7 @@ Focus: Vite production bundling, static asset optimization, GitHub Actions autom
   - **Documentation Artifact:** `docs/architecture/pwa_offline_caching.md`
   - **Pass-to-Complete Gate:** Offline load test verifies application serves index.html and assets with network disabled.
 
-- [ ] Task 4.4: Headless Browser Smoke & E2E Test Suite (Playwright)
+- [x] Task 4.4: Headless Browser Smoke & E2E Test Suite (Playwright)
   - **Objective:** Implement automated end-to-end browser smoke tests validating page load, Monaco editor mounting, WebGL 3D canvas initialization, WebAudio context creation, and variation gallery opening.
   - **Bottleneck Mitigation:** Headless Chromium execution in CI environment with explicit timeouts (10s max).
   - **Automated Test Definition:** `npx playwright test`
