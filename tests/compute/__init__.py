@@ -1,1 +1,0 @@
-"""Compute package test suite."""
