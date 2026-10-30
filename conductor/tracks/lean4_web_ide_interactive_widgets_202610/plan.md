@@ -261,7 +261,7 @@ Focus: Vite production bundling, static asset optimization, GitHub Actions autom
   - **Documentation Artifact:** `docs/architecture/github_pages_deployment.md`
   - **Pass-to-Complete Gate:** GitHub Actions workflow file passes schema validation and correctly targets GitHub Pages environment.
 
-- [ ] Task 4.3: Service Worker Offline Caching & PWA Manifest
+- [x] Task 4.3: Service Worker Offline Caching & PWA Manifest
   - **Objective:** Configure progressive web application (PWA) manifest and Service Worker caching strategy (Stale-While-Revalidate for app shell, Cache-First for static assets) enabling 100% offline usage.
   - **Bottleneck Mitigation:** Local cache storage bounds preventing browser quota exhaustion.
   - **Automated Test Definition:** `npm --prefix packages/web test -- src/pwa/serviceWorker.test.ts`
