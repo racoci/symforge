@@ -2,8 +2,8 @@
   "track_id": "lean4_web_ide_interactive_widgets_202610",
   "name": "Lean 4 Web IDE with Interactive Domain Widgets and In-Context Scoped Variation Generator",
   "type": "Feature",
-  "status": "new",
+  "status": "completed",
   "created_at": "2026-10-26T00:00:00Z",
-  "updated_at": "2026-10-26T00:00:00Z",
+  "updated_at": "2026-11-02T00:00:00Z",
   "description": "Interactive browser-based Lean 4 Web IDE hosted on GitHub Pages featuring domain-agnostic interactive widgets (3D WebGL SDF raymarching, WebAudio live spectrogram, generalized hyperdimensional function plotter) and an in-context scoped PCFG/PHOG variation generator with a live visual gallery."
 }
